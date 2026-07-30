@@ -31,7 +31,9 @@ Next.js (App Router) + Supabase + 알라딘 TTB API.
 - 알라딘 API 키는 서버(Route Handler)에서만 쓴다. `NEXT_PUBLIC_` 접두사 금지
 - 모든 테이블에 RLS를 켠다. `book`을 제외한 전부는 `auth.uid() = user_id`
 - 모든 조회에 `deleted_at IS NULL`을 포함한다
-- 표지 원본은 200px가 최대다. 이보다 크게 쓰지 않는다
+- 표지 원본은 `/cover500/`으로 500px까지 받는다 (기획서 §7).
+  실패하면 200px로 폴백하고 `cover_is_large`에 기록한다.
+  표시 크기는 `design.md`와 §5가 정한다 — 원본이 커졌다고 임의로 키우지 않는다
 - 강조색 `#C4573A`는 역할이 정해질 때까지 쓰지 않는다
 - UI 컴포넌트 라이브러리의 기본 스타일을 그대로 쓰지 않는다
 
