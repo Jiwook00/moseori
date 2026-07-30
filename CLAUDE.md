@@ -35,6 +35,16 @@ Next.js (App Router) + Supabase + 알라딘 TTB API.
 - 강조색 `#C4573A`는 역할이 정해질 때까지 쓰지 않는다
 - UI 컴포넌트 라이브러리의 기본 스타일을 그대로 쓰지 않는다
 
+## Supabase 프로젝트
+
+**전용 프로젝트 `moseori` (ref `ccfgjaxaylwwdfsspdys`, Seoul).** 모서리만 씁니다.
+
+- 테이블 이름은 기획서 §4 그대로. 프리픽스를 붙이지 않습니다
+- 마이그레이션은 `supabase/migrations/`에 쌓고 `supabase db push`로 올립니다
+- 같은 조직에 `toy` 프로젝트(`checkin_*`와 공용)가 따로 있습니다.
+  **`supabase link`가 그쪽을 가리키고 있지 않은지 확인하세요.**
+  `cat supabase/.temp/project-ref` → `ccfgjaxaylwwdfsspdys`여야 합니다
+
 ## 작업 방식
 
 - 코드를 쓰기 전에 계획을 먼저 보여준다
@@ -54,7 +64,27 @@ Next.js (App Router) + Supabase + 알라딘 TTB API.
 
 ## 프로젝트 구조
 
-<!-- 세션 1이 끝나면 여기를 채운다: 폴더 구조, 실행·빌드 명령, 환경변수 목록 -->
+```
+src/
+  proxy.ts                       전 경로 보호 (Next 16 규약. 예전 이름은 middleware)
+  lib/supabase/
+    client.ts                    브라우저용
+    server.ts                    서버 컴포넌트 · Route Handler · 서버 액션
+    proxy.ts                     updateSession — 세션 갱신 + 접근 판정
+  app/
+    layout.tsx  globals.css      design.md 색 토큰
+    page.tsx                     랜딩 (미인증 전용)
+    shelf/                       책장
+    auth/callback/route.ts       OAuth code 교환
+    auth/signout/route.ts
+supabase/migrations/             SQL. 여기에 계속 쌓는다
+docs/
+```
+
+- 실행 `npm run dev` · 빌드 `npm run build` · 린트 `npm run lint`
+- 환경변수는 `.env.local` (`.env.local.example` 참조).
+  `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ALADIN_TTB_KEY`
+- 루트의 `.env`는 Vite 시절 잔재(`VITE_*`)입니다. 쓰지 마세요
 
 ## 반복해서 지적된 것
 

@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/*
+ * design.md §색. 값은 시안에서 역산한 것이므로 임의로 조정하지 않습니다.
+ * 강조색 #C4573A는 역할이 정해질 때까지 여기에 두지 않습니다.
+ * 활자 규격(MaruBuri / IBM Plex Sans KR)은 다음 세션에서 붙입니다.
+ */
+@theme {
+  --color-paper: #f7f4ed;
+  --color-card: #fffdf8;
+  --color-ink: #23211d;
+  --color-sub: #6b665c;
+  --color-line: #ddd8cc;
+  --color-underline: #57544d;
+}
+
+/* 순백·순검정을 쓰지 않습니다. 다크 모드도 두지 않습니다 — 종이는 한 색입니다. */
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}

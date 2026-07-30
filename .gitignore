@@ -10,6 +10,12 @@ node_modules/
 out/
 build/
 dist/
+next-env.d.ts
+*.tsbuildinfo
+
+# Supabase CLI 로컬 상태
+supabase/.temp/
+supabase/.branches/
 
 # 환경 변수
 .env
