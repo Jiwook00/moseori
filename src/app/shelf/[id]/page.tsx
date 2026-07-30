@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { bookSize } from "@/lib/books/dimensions";
 import { coverPublicUrl } from "@/lib/cover-path";
+import { STATUS_LABELS, isShelfStatus } from "@/lib/shelf/status";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -13,13 +14,6 @@ import { createClient } from "@/lib/supabase/server";
  * design.md 규격은 다음 세션입니다. 지금 있는 것은 담기가 제대로 됐는지
  * 눈으로 확인하는 자리입니다.
  */
-
-const STATUS_LABELS: Record<string, string> = {
-  wishlist: "읽고 싶음",
-  reading: "읽는 중",
-  finished: "읽음",
-  set_aside: "덮어둠",
-};
 
 type ShelfItemDetail = {
   id: string;
@@ -104,7 +98,9 @@ export default async function BookDetailPage({
             {facts.join(" · ")}
           </p>
           <p className="mt-4 text-xs">
-            {STATUS_LABELS[data.status] ?? data.status}
+            {isShelfStatus(data.status)
+              ? STATUS_LABELS[data.status]
+              : data.status}
             {data.rating ? ` · 별점 ${data.rating}` : ""}
           </p>
         </div>

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { SearchResult } from "@/app/api/search/route";
+import { STATUSES } from "@/lib/shelf/status";
 
 /**
  * 검색과 담기 (기획서 §5 · §7).
@@ -11,13 +12,6 @@ import type { SearchResult } from "@/app/api/search/route";
  * 있고, 세 번의 탭)는 다음 세션입니다. 지금은 API가 실제로 도는지 눈으로 보기 위한
  * 최소한의 형태입니다. 활자·간격은 Tailwind 기본 스케일 위의 임시값입니다.
  */
-
-const STATUS_LABELS = [
-  ["wishlist", "읽고 싶음"],
-  ["reading", "읽는 중"],
-  ["finished", "읽음"],
-  ["set_aside", "덮어둠"],
-] as const;
 
 export default function SearchPanel() {
   const router = useRouter();
@@ -133,12 +127,12 @@ export default function SearchPanel() {
                   </p>
                 ) : (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {STATUS_LABELS.map(([status, label]) => (
+                    {STATUSES.map(({ value, label }) => (
                       <button
-                        key={status}
+                        key={value}
                         type="button"
                         disabled={addingId === result.aladinItemId}
-                        onClick={() => add(result, status)}
+                        onClick={() => add(result, value)}
                         className="border-line border px-2 py-1 text-xs disabled:opacity-50"
                       >
                         {label}

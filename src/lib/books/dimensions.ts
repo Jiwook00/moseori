@@ -75,12 +75,45 @@ export function bookSize(book: SizeInput): BookSize {
   return { width, height, corrected: height !== size_height };
 }
 
-/**
- * §5 표지 격자의 셀 높이. `높이 = size_height × 0.7`.
- * 폭은 여기서 정하지 않습니다 — 이미지 비율이 정합니다 (§5).
- */
+/** §5 표지 격자: `높이 = size_height × 0.7`. */
 export const HEIGHT_PER_MM = 0.7;
 
-export function coverSlotHeight(book: SizeInput) {
-  return Math.round(bookSize(book).height * HEIGHT_PER_MM);
+/** design.md §표지 격자: 셀 폭. 표지를 이보다 넓게 쓰지 않습니다. */
+export const CELL_WIDTH = 148;
+
+/** design.md §표지 격자: 셀 안 슬롯 높이. 표지를 이 아래 기준선에 맞춥니다. */
+export const SLOT_HEIGHT = 176;
+
+/**
+ * 표지 상자 (design.md §표지 격자).
+ *
+ * ```
+ * 높이 = size_height(mm) × 0.7
+ * 폭   = 높이 × (표지 이미지의 실제 가로/세로 비)
+ * 폭이 148px를 넘으면 폭 기준으로 다시 축소
+ * ```
+ *
+ * **높이는 판형이 정하고, 모양은 이미지가 정합니다.** 판형으로 슬롯 비율을 잡으면
+ * 이미지 비율과 어긋나 늘어나거나 잘립니다. 판형은 보정한 값을 씁니다 —
+ * 알라딘이 가로·세로를 뒤바꿔 주는 책이 있습니다 (`bookSize`).
+ *
+ * 폭을 148px로 깎을 때 높이도 같은 비율로 줄입니다. 폭만 깎으면 이미지가 눌립니다.
+ */
+export function coverBox(book: SizeInput) {
+  const size = bookSize(book);
+  const height = size.height * HEIGHT_PER_MM;
+
+  // 이미지 픽셀이 없는 책은 모양을 정해줄 심판이 없으니 판형 비율로 대신합니다.
+  const ratio =
+    book.cover_width && book.cover_height
+      ? book.cover_width / book.cover_height
+      : size.width / size.height;
+
+  const width = height * ratio;
+  const scale = width > CELL_WIDTH ? CELL_WIDTH / width : 1;
+
+  return {
+    width: Math.round(width * scale),
+    height: Math.round(height * scale),
+  };
 }
