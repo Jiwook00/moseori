@@ -3,16 +3,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { bookSize } from "@/lib/books/dimensions";
 import { coverPublicUrl } from "@/lib/cover-path";
-import { STATUS_LABELS, isShelfStatus } from "@/lib/shelf/status";
 import { createClient } from "@/lib/supabase/server";
+import AddPassage from "./add-passage";
+import PassageCard from "./passage-card";
+import ReviewEditor from "./review-editor";
+import StatusRating from "./status-rating";
 
 /**
- * 책 상세 (기획서 §5) — **스텁입니다.**
+ * 책 상세 (기획서 §5).
  *
- * 담은 직후 이 화면으로 오게 되어 있어서(§5) 이번 세션에 최소한만 만들었습니다.
- * §5가 정한 전체 구성(상태와 별점 → 리뷰 → 이 책의 밑줄 목록 → 밑줄 추가)과
- * design.md 규격은 다음 세션입니다. 지금 있는 것은 담기가 제대로 됐는지
- * 눈으로 확인하는 자리입니다.
+ * 위에서 아래로: 책장으로 가는 뒤로가기 → 표지와 책 정보(판형·쪽수·무게) →
+ * 상태와 별점 → 리뷰 → 이 책의 밑줄 목록 → 밑줄 추가. 담은 직후 이 화면으로 옵니다.
  */
 
 type ShelfItemDetail = {
@@ -27,13 +28,28 @@ type ShelfItemDetail = {
     page_count: number | null;
     size_width: number | null;
     size_height: number | null;
+    size_depth: number | null;
+    weight: number | null;
     cover_width: number | null;
     cover_height: number | null;
     style_desc: string | null;
     cover_path: string | null;
-    cover_is_large: boolean | null;
     accent_color: string | null;
   } | null;
+};
+
+type PassageRow = {
+  id: string;
+  body: string;
+  page: number | null;
+  created_at: string;
+};
+
+type CommentRow = {
+  id: string;
+  passage_id: string;
+  body: string;
+  created_at: string;
 };
 
 export default async function BookDetailPage({
@@ -44,11 +60,11 @@ export default async function BookDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  // RLS가 남의 책을 걸러줍니다. 그래도 없는 id는 404로 끝냅니다.
+  // RLS가 남의 책을 걸러줍니다. 없는 id는 404.
   const { data } = await supabase
     .from("shelf_item")
     .select(
-      "id, status, rating, book:book(title, author, publisher, published_at, page_count, size_width, size_height, cover_width, cover_height, style_desc, cover_path, cover_is_large, accent_color)",
+      "id, status, rating, book:book(title, author, publisher, published_at, page_count, size_width, size_height, size_depth, weight, cover_width, cover_height, style_desc, cover_path, accent_color)",
     )
     .eq("id", id)
     .maybeSingle<ShelfItemDetail>();
@@ -56,30 +72,67 @@ export default async function BookDetailPage({
   if (!data?.book) notFound();
   const { book } = data;
 
+  // 밑줄과 리뷰. 모든 조회에 deleted_at IS NULL (CLAUDE.md).
+  const [{ data: review }, { data: passages }] = await Promise.all([
+    supabase
+      .from("review")
+      .select("body")
+      .eq("shelf_item_id", id)
+      .is("deleted_at", null)
+      .maybeSingle<{ body: string }>(),
+    supabase
+      .from("passage")
+      .select("id, body, page, created_at")
+      .eq("shelf_item_id", id)
+      .is("deleted_at", null)
+      .order("page", { nullsFirst: false })
+      .order("created_at", { ascending: true })
+      .returns<PassageRow[]>(),
+  ]);
+
+  const passageRows = passages ?? [];
+  const commentsByPassage = new Map<string, CommentRow[]>();
+  if (passageRows.length > 0) {
+    const { data: comments } = await supabase
+      .from("passage_comment")
+      .select("id, passage_id, body, created_at")
+      .in(
+        "passage_id",
+        passageRows.map((p) => p.id),
+      )
+      .is("deleted_at", null)
+      .order("created_at", { ascending: true })
+      .returns<CommentRow[]>();
+    for (const comment of comments ?? []) {
+      const list = commentsByPassage.get(comment.passage_id) ?? [];
+      list.push(comment);
+      commentsByPassage.set(comment.passage_id, list);
+    }
+  }
+
   // 판형은 알라딘이 가로·세로를 뒤바꿔 주는 책이 있어 보정해서 씁니다 (§5).
   const size = bookSize(book);
-
   const facts = [
     book.publisher,
-    book.published_at,
     book.page_count ? `${book.page_count}쪽` : null,
     book.size_width && book.size_height
       ? `${size.width} × ${size.height}mm${size.corrected ? " (보정)" : ""}`
       : null,
+    book.weight ? `${book.weight}g` : null,
     book.style_desc,
   ].filter(Boolean);
 
   return (
-    <main className="mx-auto flex w-full max-w-[720px] flex-1 flex-col px-5 py-20 sm:px-7">
-      <Link href="/shelf" className="text-sub text-xs underline-offset-4">
-        ← 책장
+    <main className="mx-auto flex w-full max-w-[720px] flex-1 flex-col px-5 py-14 sm:px-7">
+      <Link
+        href="/shelf"
+        className="text-sub hover:text-ink mb-8 inline-flex w-fit items-center gap-1 text-xs"
+      >
+        <span aria-hidden>←</span> 책장
       </Link>
 
-      <div className="mt-10 flex gap-6">
-        {/*
-          표지의 실제 픽셀 크기를 저장해두었으므로 비율을 추측하지 않습니다.
-          모양은 이미지가 정합니다 (§5).
-        */}
+      <div className="flex gap-6">
+        {/* 표지의 실제 픽셀 크기가 있으므로 비율을 추측하지 않습니다 (§5). */}
         {book.cover_path && book.cover_width && book.cover_height && (
           <Image
             src={coverPublicUrl(book.cover_path)}
@@ -90,34 +143,53 @@ export default async function BookDetailPage({
           />
         )}
         <div className="flex-1">
-          <h1 className="text-lg leading-snug">{book.title}</h1>
+          <h1 className="text-[19px] leading-snug">{book.title}</h1>
           {book.author && (
             <p className="text-sub mt-2 text-sm">{book.author}</p>
           )}
-          <p className="text-sub mt-4 text-xs leading-relaxed">
-            {facts.join(" · ")}
-          </p>
-          <p className="mt-4 text-xs">
-            {isShelfStatus(data.status)
-              ? STATUS_LABELS[data.status]
-              : data.status}
-            {data.rating ? ` · 별점 ${data.rating}` : ""}
-          </p>
+          {facts.length > 0 && (
+            <p className="text-sub mt-4 text-xs leading-relaxed">
+              {facts.join(" · ")}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* 담기 결과를 눈으로 확인하는 자리입니다. 디자인이 붙으면 사라집니다. */}
-      <p className="text-sub mt-12 text-[11px]">
-        표지 {book.cover_is_large ? "500px" : "200px"} · accent{" "}
-        {book.accent_color ?? "없음"}
-        {book.accent_color && (
-          <span
-            aria-hidden
-            className="border-line ml-2 inline-block h-3 w-3 border align-middle"
-            style={{ background: book.accent_color }}
-          />
+      <StatusRating
+        shelfItemId={data.id}
+        initialStatus={data.status}
+        initialRating={data.rating}
+      />
+
+      <ReviewEditor shelfItemId={data.id} initialBody={review?.body ?? ""} />
+
+      <section className="mt-10">
+        <p className="text-sub text-[10.5px] tracking-[0.09em]">
+          밑줄{passageRows.length > 0 ? ` ${passageRows.length}` : ""}
+        </p>
+
+        {passageRows.length === 0 ? (
+          <p className="text-sub mt-4 text-sm">
+            아직 밑줄이 없습니다. 좋았던 문장을 그어보세요.
+          </p>
+        ) : (
+          <div className="mt-5 flex flex-col gap-[28px]">
+            {passageRows.map((passage, index) => (
+              <PassageCard
+                key={passage.id}
+                id={passage.id}
+                body={passage.body}
+                page={passage.page}
+                accentColor={book.accent_color}
+                comments={commentsByPassage.get(passage.id) ?? []}
+                drawDelay={Math.min(index, 8) * 0.08}
+              />
+            ))}
+          </div>
         )}
-      </p>
+      </section>
+
+      <AddPassage shelfItemId={data.id} />
     </main>
   );
 }

@@ -24,12 +24,22 @@ export default function ScribbleLine({
   seed,
   className,
   stroke = "var(--color-underline)",
+  animate = false,
+  delay = 0,
 }: {
   /** 대상의 id나 라벨. 같은 시드는 항상 같은 선입니다 */
   seed: string;
   className?: string;
   /** design.md: 기본은 밑줄색, 네비는 먹색 */
   stroke?: string;
+  /**
+   * 나타날 때 왼→오른쪽으로 그어집니다 (design.md §모션, 0.7s ease-out).
+   * 네비의 활성 표시는 켜지 않습니다 — 페이지가 바뀔 때마다 다시 그어지면
+   * 산만합니다. 문장 카드 구분선·완독 반응처럼 등장하는 자리에서만 켭니다.
+   */
+  animate?: boolean;
+  /** 여러 장이 순차로 나타날 때의 지연(초). */
+  delay?: number;
 }) {
   const box = useRef<HTMLSpanElement>(null);
   const [width, setWidth] = useState(0);
@@ -61,6 +71,10 @@ export default function ScribbleLine({
             strokeWidth={2}
             strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
+            // pathLength로 정규화해 실제 길이와 무관하게 dashoffset 1→0.
+            pathLength={animate ? 1 : undefined}
+            className={animate ? "scribble-draw" : undefined}
+            style={animate ? { animationDelay: `${delay}s` } : undefined}
           />
         </svg>
       )}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_KR } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 /**
@@ -14,14 +15,25 @@ import "./globals.css";
  * (한글 UI가 시스템 폰트로 떨어집니다). 비워두면 Google이 주는 CSS를 전부 받아
  * 한글 서브셋까지 내려받습니다. 대신 unicode-range가 100개 넘게 쪼개져 있어
  * `preload`는 끕니다 — `swap`으로 처음 한 번만 폴백을 보이게 두는 쪽이 낫습니다.
- *
- * MaruBuri(수집한 문장)는 이번 화면에 문장이 나오지 않으므로 아직 붙이지 않았습니다.
  */
 const plexSansKR = IBM_Plex_Sans_KR({
   weight: ["400", "500", "600"],
   display: "swap",
   preload: false,
   variable: "--font-plex",
+});
+
+/**
+ * MaruBuri(수집한 문장) — **수집한 문장에만** 씁니다(§타이포). 구글 폰트에 없어
+ * woff2 하나(Regular 400)를 직접 서빙합니다. design.md가 MaruBuri는 400만 쓰기로
+ * 정했으므로 한 무게면 충분합니다. 책 상세의 밑줄이 첫 등장이라 이제 붙입니다.
+ */
+const maruBuri = localFont({
+  src: "./fonts/MaruBuri-Regular.woff2",
+  weight: "400",
+  display: "swap",
+  preload: false,
+  variable: "--font-maru",
 });
 
 export const metadata: Metadata = {
@@ -35,7 +47,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${plexSansKR.variable} h-full antialiased`}>
+    <html
+      lang="ko"
+      className={`${plexSansKR.variable} ${maruBuri.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
