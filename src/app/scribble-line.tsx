@@ -15,10 +15,10 @@ import { scribblePath } from "@/lib/scribble";
  */
 
 /**
- * 선을 담는 높이. 시작·끝점이 ±3px, 제어점이 ±2px 흔들리므로(design.md)
- * 굵기 2px까지 합쳐 10px이면 잘리지 않습니다.
+ * 선을 담는 높이. design.md §문장 카드의 밑줄이 "높이 12px". 마디점이 위아래로
+ * ±2.5px, 끝점 ±2px 흔들려도(design.md) 굵기 2px까지 합쳐 잘리지 않습니다.
  */
-const HEIGHT = 10;
+const HEIGHT = 12;
 
 export default function ScribbleLine({
   seed,

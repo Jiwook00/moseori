@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { bookSize } from "@/lib/books/dimensions";
 import { coverPublicUrl } from "@/lib/cover-path";
 import { createClient } from "@/lib/supabase/server";
+import PassageCard from "@/app/passage-card";
 import AddPassage from "./add-passage";
-import PassageCard from "./passage-card";
 import ReviewEditor from "./review-editor";
 import StatusRating from "./status-rating";
 
@@ -174,7 +174,7 @@ export default async function BookDetailPage({
           </p>
         ) : (
           <div className="mt-5 flex flex-col gap-[28px]">
-            {passageRows.map((passage, index) => (
+            {passageRows.map((passage) => (
               <PassageCard
                 key={passage.id}
                 id={passage.id}
@@ -182,7 +182,7 @@ export default async function BookDetailPage({
                 page={passage.page}
                 accentColor={book.accent_color}
                 comments={commentsByPassage.get(passage.id) ?? []}
-                drawDelay={Math.min(index, 8) * 0.08}
+                draw={false}
               />
             ))}
           </div>

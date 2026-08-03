@@ -18,10 +18,14 @@
  * 폭이 넓은 항목만 굴곡이 펴집니다.
  */
 
-/** 시작·끝점을 흔드는 폭 (px). design.md: ±3px. */
-const END_JITTER = 3;
-/** 제어점 y를 흔드는 폭 (px). design.md: ±2px. 그 이상은 장난스러워집니다. */
-const CONTROL_JITTER = 2;
+/** 시작·끝점을 흔드는 폭 (px). design.md: ±2px. */
+const END_JITTER = 2;
+/**
+ * 안쪽 마디점이 위아래로 흔들리는 폭 (px). design.md §손으로 그은 선.
+ * 마디마다 번갈아 이만큼(× 0.6~1) 흔들어 손그림 물결을 만듭니다. 이보다 크면
+ * 위아래 폭이 커져 지저분해집니다.
+ */
+const WAVE_AMPLITUDE = 2.5;
 
 /** 문자열 시드 → 32bit (xmur3). */
 function seedToInt(seed: string) {
@@ -44,11 +48,23 @@ function randomFrom(state: number) {
   };
 }
 
+/** 물결 한 마디의 목표 길이 (px). 마디 수는 폭 ÷ 이 값입니다. */
+const WAVE_LENGTH = 160;
+
 /**
  * 시드와 폭으로 손으로 그은 선의 path를 만듭니다.
  *
- * 제어점 개수는 폭과 무관하게 둘로 고정하고 위치만 폭에 비례시킵니다.
- * 굴곡의 **비율**이 유지되어야 하기 때문입니다 (design.md).
+ * **폭 끝까지(0→width) 죽 이어지는 하나의 선입니다.** 문장과 출처를 가르는
+ * 구분선 자리라 중간에 끊기면 안 됩니다 (design.md §문장 카드의 밑줄).
+ *
+ * **잔물결의 진폭은 design.md 그대로**(제어점 ±2 / 끝점 ±3) 두고 **빈도만 폭에
+ * 비례**시킵니다. 마디 수를 `폭 ÷ WAVE_LENGTH`로 잡으므로, 짧은 네비 라벨은 한
+ * 마디로 담백하고 긴 카드 구분선은 시안처럼 여러 번 물결칩니다 — 굴곡의 밀도가
+ * 폭과 무관하게 유지됩니다. 마디마다 위아래로 번갈아 흔들어 확실히 물결지게 하되
+ * 크기는 시드로 조금씩 달라져 도장처럼 보이지 않습니다.
+ *
+ * 마디들은 Catmull-Rom을 3차 베지어로 바꿔 매끄럽게 잇습니다 — 각 마디점을
+ * 정확히 지나므로 진폭이 노드 값(±2/±3) 밖으로 튀지 않고, 손으로 그은 듯 흐릅니다.
  *
  * @param seed 대상의 id나 라벨. 같은 시드는 항상 같은 선입니다
  * @param width 요소의 실제 폭 (px)
@@ -59,17 +75,33 @@ export function scribblePath(seed: string, width: number, height: number) {
   const jitter = (amount: number) => (random() * 2 - 1) * amount;
 
   const mid = height / 2;
-  const y0 = mid + jitter(END_JITTER);
-  const y1 = mid + jitter(CONTROL_JITTER);
-  const y2 = mid + jitter(CONTROL_JITTER);
-  const y3 = mid + jitter(END_JITTER);
+  const segments = Math.max(1, Math.round(width / WAVE_LENGTH));
 
+  // 마디점의 y. 끝점은 ±3 안에서 자유롭게, 안쪽은 위아래로 번갈아 ±2 안에서.
+  const ys: number[] = [];
+  for (let i = 0; i <= segments; i += 1) {
+    if (i === 0 || i === segments) {
+      ys.push(mid + jitter(END_JITTER));
+    } else {
+      const sign = i % 2 === 0 ? 1 : -1;
+      const magnitude = WAVE_AMPLITUDE * (0.6 + 0.4 * random());
+      ys.push(mid + sign * magnitude);
+    }
+  }
+
+  // Catmull-Rom 접선용 팬텀 노드는 양 끝을 그대로 복제해 끝을 매끄럽게 둡니다.
+  const yAt = (i: number) => ys[Math.max(0, Math.min(segments, i))];
+  const xAt = (i: number) => (i * width) / segments;
+  const dx = width / segments;
   const round = (n: number) => Math.round(n * 100) / 100;
 
-  return [
-    `M 0 ${round(y0)}`,
-    `C ${round(width / 3)} ${round(y1)}`,
-    `${round((width * 2) / 3)} ${round(y2)}`,
-    `${round(width)} ${round(y3)}`,
-  ].join(" ");
+  let path = `M 0 ${round(ys[0])}`;
+  for (let i = 0; i < segments; i += 1) {
+    const c1x = xAt(i) + dx / 3;
+    const c2x = xAt(i + 1) - dx / 3;
+    const c1y = ys[i] + (yAt(i + 1) - yAt(i - 1)) / 6;
+    const c2y = ys[i + 1] - (yAt(i + 2) - yAt(i)) / 6;
+    path += ` C ${round(c1x)} ${round(c1y)}, ${round(c2x)} ${round(c2y)}, ${round(xAt(i + 1))} ${round(ys[i + 1])}`;
+  }
+  return path;
 }
