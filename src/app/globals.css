@@ -14,11 +14,12 @@
 
   /*
    * 산세리프는 IBM Plex Sans KR (layout.tsx에서 next/font로 서빙).
-   * 세리프(MaruBuri)는 수집한 문장에만 쓰므로 그 화면을 만들 때 더합니다.
+   * 세리프(MaruBuri)는 수집한 문장에만 씁니다 — 책 상세의 밑줄이 첫 등장입니다.
    */
   --font-sans:
     var(--font-plex), ui-sans-serif, system-ui, "Apple SD Gothic Neo",
     sans-serif;
+  --font-serif: var(--font-maru), "MaruBuri", serif;
 }
 
 /* 순백·순검정을 쓰지 않습니다. 다크 모드도 두지 않습니다 — 종이는 한 색입니다. */
@@ -26,4 +27,23 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
+}
+
+/*
+ * 손으로 그은 선이 왼→오른쪽으로 그어집니다 (design.md §모션, 0.7s ease-out).
+ * pathLength=1로 정규화했으므로 실제 길이와 무관하게 dashoffset 1→0.
+ * reduced-motion에서는 그냥 그어진 채로 둡니다.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .scribble-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: scribble-draw 0.7s ease-out forwards;
+  }
+}
+
+@keyframes scribble-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
