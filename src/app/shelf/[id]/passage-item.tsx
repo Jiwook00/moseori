@@ -90,11 +90,11 @@ export default function PassageItem({
   if (editing) {
     return (
       // 읽기 카드와 같은 스킨(passage-card.tsx가 판형 수치의 원본입니다 —
-      // px/pt/pb, 세리프 21px/1.75, 손그림 선 mt-[7px], footer mt-[18px].
+      // px/pt/pb, 세리프 15px/1.75, 손그림 선 mt-[7px], footer mt-[18px].
       // 바뀌면 함께 맞추세요). 문장 자리에만 투명 textarea를 얹습니다.
       <form
         onSubmit={submit}
-        className="block px-[30px] pt-[32px] pb-[26px]"
+        className="block px-[18px] pt-[20px] pb-[14px]"
         style={{ background: accentColor ?? "var(--color-card)" }}
       >
         <GrowTextarea
@@ -102,7 +102,7 @@ export default function PassageItem({
           onChange={(event) => setBody(event.target.value)}
           aria-label="문장"
           autoFocus
-          className="placeholder:text-sub/70 text-ink min-h-[44px] w-full bg-transparent font-serif text-[21px] leading-[1.75] outline-none"
+          className="placeholder:text-sub/70 text-ink min-h-[44px] w-full bg-transparent font-serif text-[15px] leading-[1.75] outline-none"
         />
 
         {/* 읽기 카드와 같은 자리의 손그림 선. 같은 시드라 같은 파형입니다. */}

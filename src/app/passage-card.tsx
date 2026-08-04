@@ -45,7 +45,7 @@ export default function PassageCard({
   /** 주면 카드 전체가 그 책 상세로 가는 링크가 됩니다. */
   href?: string;
   /**
-   * 오늘의 밑줄 변형 (design.md §오늘의 밑줄). 여백 34/32/28, 문장 22px로
+   * 오늘의 밑줄 변형 (design.md §오늘의 밑줄). 여백 22/20/16, 문장 16px로
    * 키웁니다. 나머지 구성(손그림선·출처·양끝 정렬)은 일반 문장 카드와 같습니다.
    */
   today?: boolean;
@@ -80,7 +80,7 @@ export default function PassageCard({
     <>
       <p
         className={`font-serif leading-[1.75] text-ink ${
-          today ? "text-[22px]" : "text-[21px]"
+          today ? "text-[16px]" : "text-[15px]"
         }`}
       >
         {body}
@@ -118,8 +118,8 @@ export default function PassageCard({
   );
 
   const className = today
-    ? "block px-[32px] pt-[34px] pb-[28px]"
-    : "block px-[30px] pt-[32px] pb-[26px]";
+    ? "block px-[20px] pt-[22px] pb-[16px]"
+    : "block px-[18px] pt-[20px] pb-[14px]";
   const style = { background: accentColor ?? "var(--color-card)" };
 
   if (href) {

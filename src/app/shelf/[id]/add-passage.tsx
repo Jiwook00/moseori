@@ -13,7 +13,7 @@ import GrowTextarea from "./grow-textarea";
  * 스크롤과 무관하게 항상 닿을 수 있도록, 모바일에서는 아래에 붙여 둡니다(§5).
  *
  * 새 밑줄도 **카드 위에 쓰는** 감각으로 둡니다 — 읽기·고치기와 같은 accent 배경·
- * 세리프 21px(passage-card.tsx가 판형 수치의 원본). 회색 상자로 떨어지지 않게 함입니다.
+ * 세리프 15px(passage-card.tsx가 판형 수치의 원본). 회색 상자로 떨어지지 않게 함입니다.
  * 손그림 선은 저장돼 카드가 될 때 생기므로 입력 중엔 긋지 않습니다(id가 아직 없음).
  * 코멘트는 내 글이라 색 없이 산세리프로, 읽기 카드처럼 카드 안에 흐릅니다.
  * 모바일 하단 고정 시 스크롤한 본문이 카드 옆으로 비치지 않게 바깥은 bg-paper로 덮습니다.
@@ -61,16 +61,16 @@ export default function AddPassage({
       onSubmit={submit}
       className="bg-paper sticky bottom-0 mt-10 pt-5 pb-5 sm:static sm:bg-transparent sm:pb-0"
     >
-      {/* 읽기·고치기와 같은 카드 스킨. 문장은 세리프 21px로 카드 위에 씁니다. */}
+      {/* 읽기·고치기와 같은 카드 스킨. 문장은 세리프 15px로 카드 위에 씁니다. */}
       <div
-        className="block px-[30px] pt-[32px] pb-[26px]"
+        className="block px-[18px] pt-[20px] pb-[14px]"
         style={{ background: accentColor ?? "var(--color-card)" }}
       >
         <GrowTextarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
           placeholder="좋았던 문장"
-          className="placeholder:text-sub/70 text-ink min-h-[56px] w-full bg-transparent font-serif text-[21px] leading-[1.75] outline-none"
+          className="placeholder:text-sub/70 text-ink min-h-[56px] w-full bg-transparent font-serif text-[15px] leading-[1.75] outline-none"
         />
 
         {/* 색 카드 위 컨트롤 칩. 손그림 선은 저장 후 생기므로 여기선 없습니다. */}
