@@ -6,6 +6,7 @@ import { coverPublicUrl } from "@/lib/cover-path";
 import { createClient } from "@/lib/supabase/server";
 import PassageCard from "@/app/passage-card";
 import AddPassage from "./add-passage";
+import PassageItem from "./passage-item";
 import ReviewEditor from "./review-editor";
 import StatusRating from "./status-rating";
 
@@ -175,15 +176,21 @@ export default async function BookDetailPage({
         ) : (
           <div className="mt-5 flex flex-col gap-[28px]">
             {passageRows.map((passage) => (
-              <PassageCard
+              <PassageItem
                 key={passage.id}
                 id={passage.id}
                 body={passage.body}
                 page={passage.page}
-                accentColor={book.accent_color}
-                comments={commentsByPassage.get(passage.id) ?? []}
-                draw={false}
-              />
+              >
+                <PassageCard
+                  id={passage.id}
+                  body={passage.body}
+                  page={passage.page}
+                  accentColor={book.accent_color}
+                  comments={commentsByPassage.get(passage.id) ?? []}
+                  draw={false}
+                />
+              </PassageItem>
             ))}
           </div>
         )}

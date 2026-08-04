@@ -1,14 +1,17 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
-import { saveReview } from "./actions";
+import { useState, useTransition } from "react";
+import { deleteReview, saveReview } from "./actions";
 
 /**
  * 리뷰 에디터 (기획서 §6).
  *
- * textarea에 "굵게" 버튼 하나. 에디터 라이브러리를 붙이지 않습니다.
- * 지원하는 서식은 `**굵게**`와 줄바꿈, 그게 전부입니다. 리뷰는 내 글이라
- * 산세리프입니다(§타이포).
+ * textarea 하나가 전부입니다. 에디터 라이브러리를 붙이지 않습니다.
+ * **굵게 버튼은 두지 않습니다**(사용자 지시) — 서식이 필요하면 본문에 `**`를
+ * 직접 씁니다. 리뷰는 내 글이라 산세리프입니다(§타이포).
+ *
+ * 수정은 그냥 고쳐 쓰고 저장하는 것이고, 삭제는 아래 "지우기"입니다.
+ * 지우기는 실수로 눌리지 않도록 그 자리에서 한 번 더 묻습니다.
  */
 export default function ReviewEditor({
   shelfItemId,
@@ -17,32 +20,18 @@ export default function ReviewEditor({
   shelfItemId: string;
   initialBody: string;
 }) {
-  const ref = useRef<HTMLTextAreaElement>(null);
   const [body, setBody] = useState(initialBody);
   const [savedBody, setSavedBody] = useState(initialBody);
+  const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const dirty = body !== savedBody;
 
-  function applyBold() {
-    const el = ref.current;
-    if (!el) return;
-    const { selectionStart: start, selectionEnd: end } = el;
-    const selected = body.slice(start, end);
-    const next = body.slice(0, start) + `**${selected}**` + body.slice(end);
-    setBody(next);
-    // 선택이 있었으면 그 바깥을, 없었으면 별표 사이에 커서를 둡니다.
-    const caret = selected ? start + 2 + selected.length + 2 : start + 2;
-    requestAnimationFrame(() => {
-      el.focus();
-      el.setSelectionRange(selected ? caret : caret, caret);
-    });
-  }
-
   function save() {
     if (pending || !dirty) return;
     setError(null);
+    setConfirming(false);
     const snapshot = body;
     startTransition(async () => {
       const result = await saveReview(shelfItemId, snapshot);
@@ -54,22 +43,26 @@ export default function ReviewEditor({
     });
   }
 
+  function remove() {
+    if (pending) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteReview(shelfItemId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setBody("");
+      setSavedBody("");
+      setConfirming(false);
+    });
+  }
+
   return (
     <section className="border-line mt-10 border-t pt-8">
-      <div className="mb-3 flex items-center justify-between">
-        <p className="text-sub text-[10.5px] tracking-[0.09em]">리뷰</p>
-        <button
-          type="button"
-          onClick={applyBold}
-          className="text-sub hover:text-ink text-xs font-semibold"
-          aria-label="굵게"
-        >
-          굵게
-        </button>
-      </div>
+      <p className="text-sub mb-3 text-[10.5px] tracking-[0.09em]">리뷰</p>
 
       <textarea
-        ref={ref}
         value={body}
         onChange={(event) => setBody(event.target.value)}
         placeholder="이 책에 대해 남기고 싶은 말"
@@ -90,6 +83,36 @@ export default function ReviewEditor({
           <span className="text-sub text-xs">저장됨</span>
         )}
         {error && <span className="text-sub text-xs">{error}</span>}
+
+        {savedBody &&
+          (confirming ? (
+            <span className="ml-auto flex items-center gap-3 text-xs">
+              <span className="text-sub">지울까요?</span>
+              <button
+                type="button"
+                onClick={remove}
+                disabled={pending}
+                className="hover:text-ink disabled:opacity-40"
+              >
+                지움
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirming(false)}
+                className="text-sub hover:text-ink"
+              >
+                취소
+              </button>
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              className="text-sub hover:text-ink ml-auto text-xs"
+            >
+              지우기
+            </button>
+          ))}
       </div>
     </section>
   );

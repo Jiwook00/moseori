@@ -169,6 +169,115 @@ export async function saveReview(
 }
 
 /**
+ * 리뷰 삭제. soft delete만 합니다 (모든 조회는 deleted_at IS NULL).
+ * 살아있는 리뷰가 없으면 할 일이 없으므로 그냥 성공입니다.
+ */
+export async function deleteReview(
+  shelfItemId: string,
+): Promise<MutationResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return UNAUTH;
+
+  const { data: item } = await loadItem(supabase, shelfItemId);
+  if (!item) return NOT_FOUND;
+
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("review")
+    .update({ deleted_at: now, updated_at: now })
+    .eq("shelf_item_id", shelfItemId)
+    .is("deleted_at", null);
+  if (error) return { ok: false, error: "리뷰를 지우지 못했습니다" };
+
+  revalidatePath(`/shelf/${shelfItemId}`);
+  return { ok: true };
+}
+
+/** 살아있는 내 밑줄 하나. RLS가 남의 것을 걸러줍니다. */
+async function loadPassage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  passageId: string,
+) {
+  return supabase
+    .from("passage")
+    .select("id, shelf_item_id")
+    .eq("id", passageId)
+    .is("deleted_at", null)
+    .maybeSingle<{ id: string; shelf_item_id: string }>();
+}
+
+const PASSAGE_NOT_FOUND = {
+  ok: false,
+  error: "밑줄을 찾지 못했습니다",
+} as const;
+
+/**
+ * 밑줄 수정. 문장과 쪽수만 고칩니다.
+ * `passage`에는 updated_at이 없습니다(기획서 §4) — 원문을 옮겨 적은 기록이라
+ * "언제 고쳤나"를 남기지 않는 스키마입니다. 임의로 컬럼을 늘리지 않았습니다.
+ */
+export async function updatePassage(
+  passageId: string,
+  input: { body: string; page?: number | null },
+): Promise<MutationResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return UNAUTH;
+
+  const { data: passage } = await loadPassage(supabase, passageId);
+  if (!passage) return PASSAGE_NOT_FOUND;
+
+  const text = input.body.trim();
+  if (!text) return { ok: false, error: "문장을 입력해주세요" };
+
+  const page =
+    input.page != null && Number.isFinite(input.page) && input.page > 0
+      ? Math.trunc(input.page)
+      : null;
+
+  const { error } = await supabase
+    .from("passage")
+    .update({ body: text, page })
+    .eq("id", passageId);
+  if (error) return { ok: false, error: "밑줄을 고치지 못했습니다" };
+
+  revalidatePath(`/shelf/${passage.shelf_item_id}`);
+  return { ok: true };
+}
+
+/**
+ * 밑줄 삭제. soft delete입니다.
+ * 달린 코멘트는 건드리지 않습니다 — 조회가 살아있는 밑줄을 통해서만 코멘트에
+ * 닿으므로 함께 사라지고, 밑줄을 되살릴 여지도 남습니다.
+ */
+export async function deletePassage(
+  passageId: string,
+): Promise<MutationResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return UNAUTH;
+
+  const { data: passage } = await loadPassage(supabase, passageId);
+  if (!passage) return PASSAGE_NOT_FOUND;
+
+  const { error } = await supabase
+    .from("passage")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", passageId);
+  if (error) return { ok: false, error: "밑줄을 지우지 못했습니다" };
+
+  revalidatePath(`/shelf/${passage.shelf_item_id}`);
+  return { ok: true };
+}
+
+/**
  * 밑줄 추가 (§6 밑줄 입력).
  * 문장만 있으면 저장됩니다. 쪽수·코멘트는 선택.
  * 코멘트가 있으면 같은 동작에서 passage_comment 하나를 답니다.
