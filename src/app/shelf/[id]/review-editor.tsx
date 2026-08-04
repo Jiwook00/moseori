@@ -92,14 +92,19 @@ export default function ReviewEditor({
 
       {editing ? (
         <>
+          {/*
+            리뷰는 내 글이라 종이 위에 흐릅니다(위 주석·design.md §활자). 쓰기
+            상태도 상자로 가두지 않고 읽기 본문과 같은 활자로 그 자리에 이어
+            쓰게 합니다 — 테두리·배경·좌우 여백 없이, placeholder만 은은하게.
+          */}
           <GrowTextarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             placeholder="이 책에 대해 남기고 싶은 말"
             autoFocus
-            className="border-line bg-card placeholder:text-sub/70 mt-4 min-h-[160px] w-full border p-4 text-[15px] leading-[1.7] outline-none"
+            className="placeholder:text-sub/70 text-ink mt-4 min-h-[112px] w-full bg-transparent text-[15px] leading-[1.7] outline-none"
           />
-          <div className="mt-3 flex items-center gap-3">
+          <div className="mt-4 flex items-center gap-3">
             <button
               type="button"
               onClick={save}
