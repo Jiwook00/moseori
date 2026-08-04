@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CELL_WIDTH, SLOT_HEIGHT, coverBox } from "@/lib/books/dimensions";
+import { authorName } from "@/lib/books/author";
 import { coverPublicUrl } from "@/lib/cover-path";
 
 /**
@@ -48,6 +49,7 @@ export default function ShelfGrid({ items }: { items: ShelfBook[] }) {
       {items.map((item) => {
         const { book } = item;
         const cover = coverBox(book);
+        const author = authorName(book.author);
 
         return (
           <li key={item.id} style={{ width: CELL_WIDTH }}>
@@ -81,9 +83,9 @@ export default function ShelfGrid({ items }: { items: ShelfBook[] }) {
               <span className="mt-3 block text-[11.5px] leading-[1.45]">
                 {book.title}
               </span>
-              {book.author && (
+              {author && (
                 <span className="text-sub mt-[2px] block text-[10.5px] leading-[1.4]">
-                  {book.author}
+                  {author}
                 </span>
               )}
               {item.passageCount > 0 && (
