@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import ScribbleLine from "@/app/scribble-line";
 import { deletePassage, updatePassage } from "./actions";
 import GrowTextarea from "./grow-textarea";
 
@@ -18,7 +19,9 @@ import GrowTextarea from "./grow-textarea";
  * `×`는 SVG 아이콘이 아니라 글자입니다. design.md "하지 말 것"의 아이콘 금지에
  * 걸리는 자리라, 활자로 그려 활자 규격 안에 두었습니다.
  *
- * 고치기 모드에서는 카드 자리에 밑줄 추가와 같은 모양의 입력을 놓습니다.
+ * 고치기 모드에서는 회색 상자로 나가지 않고 **카드 안에서** 고칩니다 — 읽기 카드와
+ * 같은 accent 배경·여백·세리프·손그림 선을 두고 문장 자리에만 투명 textarea를
+ * 얹습니다. 색 카드를 누르면 그 자리에서 이어 고치는 감각입니다(리뷰와 같은 원리).
  * 코멘트는 이번 범위 밖이라 고치기 모드에서 보이지 않습니다 — 코멘트는 지워지지
  * 않고 그대로 남습니다.
  */
@@ -26,11 +29,13 @@ export default function PassageItem({
   id,
   body: initialBody,
   page: initialPage,
+  accentColor,
   children,
 }: {
   id: string;
   body: string;
   page: number | null;
+  accentColor: string | null;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -84,14 +89,27 @@ export default function PassageItem({
 
   if (editing) {
     return (
-      <form onSubmit={submit}>
+      // 읽기 카드와 같은 스킨(passage-card.tsx가 판형 수치의 원본입니다 —
+      // px/pt/pb, 세리프 21px/1.75, 손그림 선 mt-[7px], footer mt-[18px].
+      // 바뀌면 함께 맞추세요). 문장 자리에만 투명 textarea를 얹습니다.
+      <form
+        onSubmit={submit}
+        className="block px-[30px] pt-[32px] pb-[26px]"
+        style={{ background: accentColor ?? "var(--color-card)" }}
+      >
         <GrowTextarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
           aria-label="문장"
-          className="border-line bg-card placeholder:text-sub/70 min-h-[82px] w-full border p-3 font-serif text-[17px] leading-[1.7] outline-none"
+          autoFocus
+          className="placeholder:text-sub/70 text-ink min-h-[44px] w-full bg-transparent font-serif text-[21px] leading-[1.75] outline-none"
         />
-        <div className="mt-2 flex items-center gap-3">
+
+        {/* 읽기 카드와 같은 자리의 손그림 선. 같은 시드라 같은 파형입니다. */}
+        <ScribbleLine seed={id} className="mt-[7px] block" />
+
+        {/* 색 카드 위 컨트롤 칩(쪽수·취소·고침). footer 자리(mt-[18px])에 둡니다. */}
+        <div className="mt-[18px] flex items-center gap-3">
           <input
             value={page}
             onChange={(event) =>

@@ -181,6 +181,7 @@ export default async function BookDetailPage({
                 id={passage.id}
                 body={passage.body}
                 page={passage.page}
+                accentColor={book.accent_color}
               >
                 <PassageCard
                   id={passage.id}
@@ -196,7 +197,7 @@ export default async function BookDetailPage({
         )}
       </section>
 
-      <AddPassage shelfItemId={data.id} />
+      <AddPassage shelfItemId={data.id} accentColor={book.accent_color} />
     </main>
   );
 }
