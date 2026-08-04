@@ -5,7 +5,7 @@ import {
   isShelfStatus,
 } from "@/lib/shelf/status";
 import { createClient } from "@/lib/supabase/server";
-import SearchPanel from "./search-panel";
+import EmptyShelf from "./empty-shelf";
 import ShelfGrid, { type ShelfBook } from "./shelf-grid";
 import StatusTabs from "./status-tabs";
 import TodaysUnderline from "./todays-underline";
@@ -13,9 +13,10 @@ import TodaysUnderline from "./todays-underline";
 /**
  * 책장 (기획서 §5).
  *
- * 맨 위 오늘의 밑줄(§6) → 상태 탭 4종 → 표지 격자 → (빈 책장이면) 검색창.
+ * 맨 위 오늘의 밑줄(§6) → 상태 탭 4종 → 표지 격자.
  *
- * **아직 없는 것:** 검색 오버레이(§5). §5에 있지만 이번 세션 범위가 아닙니다.
+ * 책이 한 권이라도 있으면 이 화면에 검색 UI는 없습니다. 검색은 네비의 아이콘이 여는
+ * 오버레이입니다 (§5). 책이 없을 때만 검색이 화면 전체를 차지합니다.
  */
 
 type Row = {
@@ -28,9 +29,9 @@ type Row = {
 export default async function ShelfPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; search?: string }>;
+  searchParams: Promise<{ status?: string }>;
 }) {
-  const { status, search } = await searchParams;
+  const { status } = await searchParams;
   const active: ShelfStatus = isShelfStatus(status) ? status : DEFAULT_STATUS;
 
   const supabase = await createClient();
@@ -85,7 +86,7 @@ export default async function ShelfPage({
   return (
     <main className="mx-auto w-full max-w-[720px] flex-1 px-5 py-14 sm:px-7">
       {empty ? (
-        <SearchPanel />
+        <EmptyShelf />
       ) : (
         <>
           {/* 맨 위 오늘의 밑줄 (§5·§6). 밑줄 3개 미만이면 스스로 아무것도 안 그립니다. */}
@@ -100,9 +101,6 @@ export default async function ShelfPage({
               <p className="text-sub text-[12px]">여기엔 아직 없습니다</p>
             )}
           </div>
-
-          {/* 검색 오버레이(§5)가 생기면 사라집니다. 지금은 네비의 검색이 여는 자리. */}
-          {search && <SearchPanel />}
         </>
       )}
 
