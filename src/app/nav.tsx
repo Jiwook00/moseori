@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import ScribbleLine from "./scribble-line";
+import SearchOverlay from "./search/search-overlay";
 
 /**
  * 상단 네비 (design.md §레이아웃 · §손으로 그은 선).
@@ -25,6 +27,11 @@ const ITEMS = [
 
 export default function Nav() {
   const pathname = usePathname();
+  /*
+   * 오버레이는 네비가 듭니다. URL을 건드리지 않아 "끝나면 원래 자리로 돌아온다"(§5)가
+   * 저절로 성립하고, 책장이든 밑줄이든 네비가 있는 곳이면 같게 동작합니다.
+   */
+  const [searching, setSearching] = useState(false);
 
   return (
     <header className="border-line border-b">
@@ -54,13 +61,12 @@ export default function Nav() {
           );
         })}
 
-        {/*
-          검색은 화면이 아니라 어디서나 열리는 오버레이입니다 (§5). 오버레이는
-          아직 없어서 지금은 책장의 검색창을 펼치는 링크입니다.
-        */}
-        <Link
-          href="/shelf?search=1"
+        {/* 검색은 화면이 아니라 어디서나 열리는 오버레이입니다 (§5). */}
+        <button
+          type="button"
+          onClick={() => setSearching(true)}
           aria-label="책 검색"
+          aria-haspopup="dialog"
           className="text-sub hover:text-ink ml-auto"
         >
           <svg
@@ -76,8 +82,10 @@ export default function Nav() {
             <circle cx={6.8} cy={6.8} r={4.6} />
             <path d="M10.4 10.4 L14 14" />
           </svg>
-        </Link>
+        </button>
       </nav>
+
+      {searching && <SearchOverlay onClose={() => setSearching(false)} />}
     </header>
   );
 }
