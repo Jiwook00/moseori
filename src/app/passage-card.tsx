@@ -31,6 +31,7 @@ export default function PassageCard({
   comments,
   source,
   href,
+  today = false,
   draw = true,
   drawDelay = 0,
 }: {
@@ -43,6 +44,11 @@ export default function PassageCard({
   source?: { title: string; author: string | null };
   /** 주면 카드 전체가 그 책 상세로 가는 링크가 됩니다. */
   href?: string;
+  /**
+   * 오늘의 밑줄 변형 (design.md §오늘의 밑줄). 여백 34/32/28, 문장 22px로
+   * 키웁니다. 나머지 구성(손그림선·출처·양끝 정렬)은 일반 문장 카드와 같습니다.
+   */
+  today?: boolean;
   /**
    * 손그림 선을 그어지는 연출로 등장시킬지 (design.md §모션).
    * **지금은 목록·상세 모두 `false`** — 카드의 밑줄은 처음부터 완성된 전폭 선으로
@@ -72,7 +78,13 @@ export default function PassageCard({
 
   const inner = (
     <>
-      <p className="font-serif text-[21px] leading-[1.75] text-ink">{body}</p>
+      <p
+        className={`font-serif leading-[1.75] text-ink ${
+          today ? "text-[22px]" : "text-[21px]"
+        }`}
+      >
+        {body}
+      </p>
 
       {/* 문장과 출처를 가르는 자리. 카드당 선은 정확히 하나 (design.md). */}
       <ScribbleLine
@@ -105,7 +117,9 @@ export default function PassageCard({
     </>
   );
 
-  const className = "block px-[30px] pt-[32px] pb-[26px]";
+  const className = today
+    ? "block px-[32px] pt-[34px] pb-[28px]"
+    : "block px-[30px] pt-[32px] pb-[26px]";
   const style = { background: accentColor ?? "var(--color-card)" };
 
   if (href) {

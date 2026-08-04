@@ -8,14 +8,14 @@ import { createClient } from "@/lib/supabase/server";
 import SearchPanel from "./search-panel";
 import ShelfGrid, { type ShelfBook } from "./shelf-grid";
 import StatusTabs from "./status-tabs";
+import TodaysUnderline from "./todays-underline";
 
 /**
  * 책장 (기획서 §5).
  *
- * 상태 탭 4종 → 표지 격자 → (빈 책장이면) 검색창.
+ * 맨 위 오늘의 밑줄(§6) → 상태 탭 4종 → 표지 격자 → (빈 책장이면) 검색창.
  *
- * **아직 없는 것:** 맨 위 오늘의 밑줄 한 장(§6)과 검색 오버레이(§5). 둘 다 §5에
- * 있지만 이번 세션 범위가 아닙니다. `progress.md`에 적어두었습니다.
+ * **아직 없는 것:** 검색 오버레이(§5). §5에 있지만 이번 세션 범위가 아닙니다.
  */
 
 type Row = {
@@ -34,6 +34,10 @@ export default async function ShelfPage({
   const active: ShelfStatus = isShelfStatus(status) ? status : DEFAULT_STATUS;
 
   const supabase = await createClient();
+
+  // 오늘의 밑줄 시드의 절반. 세션 판정은 getClaims (progress.md).
+  const { data: claims } = await supabase.auth.getClaims();
+  const userId = claims?.claims?.sub;
 
   /*
    * 아카이브된 항목은 책장에 나오지 않습니다 (§5). 상태는 여기서 걸러내지 않고
@@ -84,6 +88,9 @@ export default async function ShelfPage({
         <SearchPanel />
       ) : (
         <>
+          {/* 맨 위 오늘의 밑줄 (§5·§6). 밑줄 3개 미만이면 스스로 아무것도 안 그립니다. */}
+          {userId && <TodaysUnderline userId={userId} />}
+
           <StatusTabs active={active} counts={counts} />
 
           <div className="mt-9">
