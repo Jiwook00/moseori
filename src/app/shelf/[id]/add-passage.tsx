@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { addPassage } from "./actions";
+import GrowTextarea from "./grow-textarea";
 
 /**
  * 밑줄 추가 (기획서 §6 밑줄 입력 · §5).
@@ -48,12 +49,11 @@ export default function AddPassage({ shelfItemId }: { shelfItemId: string }) {
       onSubmit={submit}
       className="border-line bg-paper sticky bottom-0 mt-10 border-t pt-5 pb-5 sm:static sm:pb-0"
     >
-      <textarea
+      <GrowTextarea
         value={body}
         onChange={(event) => setBody(event.target.value)}
         placeholder="좋았던 문장"
-        rows={2}
-        className="border-line bg-card placeholder:text-sub/70 w-full resize-y border p-3 font-serif text-[17px] leading-[1.7] outline-none"
+        className="border-line bg-card placeholder:text-sub/70 min-h-[82px] w-full border p-3 font-serif text-[17px] leading-[1.7] outline-none"
       />
 
       <div className="mt-2 flex items-center gap-3">
@@ -86,12 +86,11 @@ export default function AddPassage({ shelfItemId }: { shelfItemId: string }) {
       </div>
 
       {showComment && (
-        <textarea
+        <GrowTextarea
           value={comment}
           onChange={(event) => setComment(event.target.value)}
           placeholder="이 문장에 대한 생각 (선택)"
-          rows={2}
-          className="border-line bg-card placeholder:text-sub/70 mt-2 w-full resize-y border p-3 text-[13px] leading-[1.6] outline-none"
+          className="border-line bg-card placeholder:text-sub/70 mt-2 min-h-[66px] w-full border p-3 text-[13px] leading-[1.6] outline-none"
         />
       )}
 

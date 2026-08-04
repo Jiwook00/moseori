@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deletePassage, updatePassage } from "./actions";
+import GrowTextarea from "./grow-textarea";
 
 /**
  * 책 상세의 밑줄 한 칸. 문장 카드를 감싸 고치기·지우기를 답니다.
@@ -84,12 +85,11 @@ export default function PassageItem({
   if (editing) {
     return (
       <form onSubmit={submit}>
-        <textarea
+        <GrowTextarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
-          rows={3}
           aria-label="문장"
-          className="border-line bg-card placeholder:text-sub/70 w-full resize-y border p-3 font-serif text-[17px] leading-[1.7] outline-none"
+          className="border-line bg-card placeholder:text-sub/70 min-h-[82px] w-full border p-3 font-serif text-[17px] leading-[1.7] outline-none"
         />
         <div className="mt-2 flex items-center gap-3">
           <input

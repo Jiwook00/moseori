@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { deleteReview, saveReview } from "./actions";
+import GrowTextarea from "./grow-textarea";
 
 /**
  * 리뷰 에디터 (기획서 §6).
@@ -62,12 +63,11 @@ export default function ReviewEditor({
     <section className="border-line mt-10 border-t pt-8">
       <p className="text-sub mb-3 text-[10.5px] tracking-[0.09em]">리뷰</p>
 
-      <textarea
+      <GrowTextarea
         value={body}
         onChange={(event) => setBody(event.target.value)}
         placeholder="이 책에 대해 남기고 싶은 말"
-        rows={5}
-        className="border-line bg-card placeholder:text-sub/70 w-full resize-y border p-4 text-[15px] leading-[1.7] outline-none"
+        className="border-line bg-card placeholder:text-sub/70 min-h-[160px] w-full border p-4 text-[15px] leading-[1.7] outline-none"
       />
 
       <div className="mt-3 flex items-center gap-3">
