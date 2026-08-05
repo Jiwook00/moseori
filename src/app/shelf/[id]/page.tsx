@@ -10,21 +10,23 @@ import ReviewEditor from "./review-editor";
 import StatusRating from "./status-rating";
 
 /**
- * 책 상세 (기획서 §5). 컨테이너 폭 720 고정 — 넓은 화면에서도 읽기 폭을 지킵니다.
+ * 책 상세 (기획서 §5, design.md §레이아웃). **펼침 2단**입니다.
  *
- * 위에서 아래로: 뒤로가기 → 헤더(표지 + 정보 + 상태·별점) → 리뷰 →
- * 이 책의 밑줄 목록 → 밑줄 추가. 담은 직후 이 화면으로 옵니다.
+ * - 넓은 화면(lg↑): 왼쪽에 책(표지·제목·저자·출판사·쪽수·상태·별점)과 리뷰를
+ *   **종이 위에** 두고 `sticky`로 고정, 오른쪽에 이 책의 밑줄을 **accent 색 필드**로
+ *   화면 오른쪽 끝까지 펼칩니다. "펼친 책 — 내 밑줄".
+ * - 좁은 화면: 2단이 접혀 왼쪽(책·리뷰) → 오른쪽(밑줄 필드) 순으로 쌓입니다.
  *
- * **헤더 배치(시안 C).** 표지를 왼쪽에 크게(240px) 놓고, 오른쪽 칼럼을 표지 높이만큼
- * 늘려 위/아래로 가릅니다 — 제목·저자·출판사·쪽수·책 소개는 표지 상단에, 상태·별점은
- * 표지 하단선에 맞춰 내려갑니다. 좁은 화면(모바일)에서는 표지 아래로 쌓습니다.
- * 제목 2줄·소개 5줄로 잘라 위 묶음이 표지 높이를 넘지 않게 합니다.
+ * 밑줄 사이에는 **직선 구분선을 두지 않습니다**(사용자 결정) — 손으로 그은 밑줄과
+ * 쪽수가 경계를 대신하고, 화면의 선은 손그림 한 종류뿐이라 서명이 선명합니다.
+ * 리뷰는 내 글이라 색을 입지 않고 왼쪽 종이 위에 흐릅니다.
  *
- * 판형·무게·출간일·제본은 book에 데이터로만 두고 화면에는 내지 않습니다 (§5).
+ * 책 소개(description)는 상세에 내지 않습니다(사용자 결정). 판형·무게·출간일·제본도
+ * book에 데이터로만 두고 화면에는 내지 않습니다 (§5).
  */
 
-/** 헤더 표지 표시 폭 (§5 · design.md §레이아웃). */
-const COVER_W = 240;
+/** 왼쪽 칼럼의 표지 표시 폭 (design.md §레이아웃). */
+const COVER_W = 220;
 
 type ShelfItemDetail = {
   id: string;
@@ -35,7 +37,6 @@ type ShelfItemDetail = {
     author: string | null;
     publisher: string | null;
     page_count: number | null;
-    description: string | null;
     cover_width: number | null;
     cover_height: number | null;
     cover_path: string | null;
@@ -69,7 +70,7 @@ export default async function BookDetailPage({
   const { data } = await supabase
     .from("shelf_item")
     .select(
-      "id, status, rating, book:book(title, author, publisher, page_count, description, cover_width, cover_height, cover_path, accent_color)",
+      "id, status, rating, book:book(title, author, publisher, page_count, cover_width, cover_height, cover_path, accent_color)",
     )
     .eq("id", id)
     .maybeSingle<ShelfItemDetail>();
@@ -121,94 +122,99 @@ export default async function BookDetailPage({
   ].filter(Boolean);
 
   return (
-    <main className="mx-auto flex w-full max-w-[720px] flex-1 flex-col px-5 py-14 sm:px-7">
-      <Link
-        href="/shelf"
-        className="text-sub hover:text-ink mb-8 inline-flex w-fit items-center gap-1 text-xs"
-      >
-        <span aria-hidden>←</span> 책장
-      </Link>
+    <main className="flex w-full flex-1 flex-col">
+      <div className="px-5 pt-8 sm:px-7">
+        <Link
+          href="/shelf"
+          className="text-sub hover:text-ink inline-flex w-fit items-center gap-1 text-xs"
+        >
+          <span aria-hidden>←</span> 책장
+        </Link>
+      </div>
 
       {/*
-        헤더(시안 C). 모바일은 표지 위 · 정보 아래로 쌓고(flex-col), sm↑에서 좌우로
-        나란히 놓으며 오른쪽 칼럼을 표지 높이만큼 늘려(items-stretch) 상태·별점을
-        표지 하단선에 맞춥니다.
+        펼침 2단. lg↑에서 왼쪽(책·리뷰, 종이)과 오른쪽(밑줄, accent 필드)로 갈리고,
+        그 아래에서는 접혀 왼쪽 → 오른쪽 순으로 쌓입니다. items-start라 왼쪽을
+        sticky로 고정할 수 있습니다.
       */}
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-stretch sm:gap-7">
-        {/* 표지의 실제 픽셀 크기가 있으므로 비율을 추측하지 않습니다 (§5). */}
-        {book.cover_path && book.cover_width && book.cover_height && (
-          <Image
-            src={coverPublicUrl(book.cover_path)}
-            alt=""
-            width={book.cover_width}
-            height={book.cover_height}
-            style={{ width: COVER_W }}
-            className="h-auto shrink-0"
-          />
-        )}
-        <div className="flex flex-1 flex-col sm:justify-between sm:py-0.5">
-          <div>
-            <h1 className="line-clamp-2 text-[19px] leading-snug">
-              {book.title}
-            </h1>
-            {book.author && (
-              <p className="text-sub mt-2 text-sm">{book.author}</p>
-            )}
-            {facts.length > 0 && (
-              <p className="text-sub mt-3 text-xs">{facts.join(" · ")}</p>
-            )}
-            {book.description && (
-              <p className="text-sub mt-4 line-clamp-5 text-[13.5px] leading-[1.7]">
-                {book.description}
-              </p>
-            )}
-          </div>
-          <div className="mt-8 sm:mt-0 sm:pt-6">
+      <div className="mt-4 flex-1 lg:grid lg:grid-cols-[4fr_6fr] lg:items-start">
+        {/* 왼쪽: 책 정보 + 리뷰. 종이 위에 흐르고 넓은 화면에서 고정됩니다. */}
+        <div className="px-5 pb-10 sm:px-7 lg:sticky lg:top-6 lg:self-start lg:pr-9 lg:pb-16">
+          {/* 표지의 실제 픽셀 크기가 있으므로 비율을 추측하지 않습니다 (§5). */}
+          {book.cover_path && book.cover_width && book.cover_height && (
+            <Image
+              src={coverPublicUrl(book.cover_path)}
+              alt=""
+              width={book.cover_width}
+              height={book.cover_height}
+              style={{ width: COVER_W }}
+              className="h-auto"
+            />
+          )}
+          {/* 긴 제목도 전부 보입니다 — 옛 2줄 말줄임은 표지 높이 정렬용이었고, 이제 없어졌습니다. */}
+          <h1 className="mt-5 text-[19px] leading-snug">{book.title}</h1>
+          {book.author && (
+            <p className="text-sub mt-2 text-sm">{book.author}</p>
+          )}
+          {facts.length > 0 && (
+            <p className="text-sub mt-3 text-xs">{facts.join(" · ")}</p>
+          )}
+          <div className="mt-6">
             <StatusRating
               shelfItemId={data.id}
               initialStatus={data.status}
               initialRating={data.rating}
             />
           </div>
+
+          <ReviewEditor
+            shelfItemId={data.id}
+            initialBody={review?.body ?? ""}
+          />
+        </div>
+
+        {/*
+          오른쪽: 밑줄 accent 필드. 화면 오른쪽 끝까지 색이 흐르고(가로 여백은 필드가
+          갖습니다), 글줄만 읽기 폭으로 좁힙니다. 밑줄 사이 직선 구분선은 없습니다.
+        */}
+        <div
+          className="px-5 pt-10 pb-14 sm:px-7 lg:pt-10 lg:pl-9"
+          style={{ background: book.accent_color ?? "var(--color-card)" }}
+        >
+          <div className="max-w-[680px]">
+            <p className="text-sub text-[10.5px] tracking-[0.09em]">
+              밑줄{passageRows.length > 0 ? ` ${passageRows.length}` : ""}
+            </p>
+
+            {passageRows.length === 0 ? (
+              <p className="text-sub mt-4 text-sm">
+                아직 밑줄이 없습니다. 좋았던 문장을 그어보세요.
+              </p>
+            ) : (
+              <div className="mt-6 flex flex-col gap-8">
+                {passageRows.map((passage) => (
+                  <PassageItem
+                    key={passage.id}
+                    id={passage.id}
+                    body={passage.body}
+                    page={passage.page}
+                  >
+                    <PassageCard
+                      id={passage.id}
+                      body={passage.body}
+                      page={passage.page}
+                      comments={commentsByPassage.get(passage.id) ?? []}
+                      draw={false}
+                    />
+                  </PassageItem>
+                ))}
+              </div>
+            )}
+
+            <AddPassage shelfItemId={data.id} />
+          </div>
         </div>
       </div>
-
-      <ReviewEditor shelfItemId={data.id} initialBody={review?.body ?? ""} />
-
-      <section className="mt-10">
-        <p className="text-sub text-[10.5px] tracking-[0.09em]">
-          밑줄{passageRows.length > 0 ? ` ${passageRows.length}` : ""}
-        </p>
-
-        {passageRows.length === 0 ? (
-          <p className="text-sub mt-4 text-sm">
-            아직 밑줄이 없습니다. 좋았던 문장을 그어보세요.
-          </p>
-        ) : (
-          <div className="mt-5 flex flex-col gap-[28px]">
-            {passageRows.map((passage) => (
-              <PassageItem
-                key={passage.id}
-                id={passage.id}
-                body={passage.body}
-                page={passage.page}
-                accentColor={book.accent_color}
-              >
-                <PassageCard
-                  id={passage.id}
-                  body={passage.body}
-                  page={passage.page}
-                  accentColor={book.accent_color}
-                  comments={commentsByPassage.get(passage.id) ?? []}
-                  draw={false}
-                />
-              </PassageItem>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <AddPassage shelfItemId={data.id} accentColor={book.accent_color} />
     </main>
   );
 }

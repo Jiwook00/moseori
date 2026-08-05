@@ -1,4 +1,4 @@
-import PassageCard from "@/app/passage-card";
+import PassageBand from "@/app/passage-band";
 import { authorName } from "@/lib/books/author";
 import { createClient } from "@/lib/supabase/server";
 import { chooseTodaysPassage } from "@/lib/underline/today";
@@ -69,7 +69,7 @@ export default async function TodaysUnderline({ userId }: { userId: string }) {
       <p className="text-sub mb-4 text-[10.5px] tracking-[0.09em]">
         오늘의 밑줄
       </p>
-      <PassageCard
+      <PassageBand
         id={passage.id}
         body={passage.body}
         page={passage.page}

@@ -1,14 +1,15 @@
-import PassageCard from "@/app/passage-card";
+import PassageBand from "@/app/passage-band";
 import { authorName } from "@/lib/books/author";
 import { createClient } from "@/lib/supabase/server";
 import Nav from "../nav";
 
 /**
- * 밑줄 (기획서 §5).
+ * 밑줄 (기획서 §5, design.md §레이아웃).
  *
- * 세로 한 줄로 흐릅니다 — 격자로 깔지 않습니다. 카드마다 배경색이 그 책의
- * accent_color라, 스크롤하다 색이 바뀌면 책이 바뀐 것입니다. 카드를 누르면 그
- * 책의 상세로 갑니다(막다른 길 방지). 기본은 최신순.
+ * 세로 한 줄로 흐릅니다 — 격자로 깔지 않습니다. 밑줄마다 그 책의 accent 카드
+ * (`PassageBand`, 읽기 폭 720)를 **왼쪽 거터에 정렬**합니다 — 가운데가 아니라 왼쪽에
+ * 붙어 네비·책장과 왼쪽 모서리가 이어집니다. 스크롤하다 색이 바뀌면 책이 바뀐
+ * 것입니다. 카드를 누르면 그 책의 상세로 갑니다(막다른 길 방지). 기본은 최신순.
  *
  * 밑줄 입력은 이 화면이 아니라 책 상세에서 합니다(§5·§6). 여기는 훑어보는 자리입니다.
  * 섞기 버튼은 이번엔 넣지 않았습니다(사용자 지시).
@@ -74,7 +75,8 @@ export default async function UnderlinesPage() {
   return (
     <>
       <Nav />
-      <main className="mx-auto w-full max-w-[720px] flex-1 px-5 py-14 sm:px-7">
+      {/* 읽기 폭 720. mx-auto가 아니라 왼쪽 정렬 — 네비·책장과 왼쪽 모서리를 맞춥니다. */}
+      <main className="w-full max-w-[720px] flex-1 px-5 py-14 sm:px-7">
         {passageRows.length === 0 ? (
           <p className="text-sub text-sm">
             아직 그은 밑줄이 없습니다. 책을 열어 좋았던 문장을 그어보세요.
@@ -84,7 +86,7 @@ export default async function UnderlinesPage() {
             {passageRows.map((passage) => {
               const book = passage.shelf_item?.book;
               return (
-                <PassageCard
+                <PassageBand
                   key={passage.id}
                   id={passage.id}
                   body={passage.body}

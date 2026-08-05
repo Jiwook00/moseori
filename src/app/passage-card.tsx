@@ -1,19 +1,18 @@
-import Link from "next/link";
 import ScribbleLine from "./scribble-line";
 
 /**
- * 문장 카드 (design.md §문장 카드).
+ * 문장 카드의 **내용** (design.md §문장 카드).
  *
- * 배경은 그 책의 accent_color, 각진 모서리. 구성은
- * 문장 →(7px)→ 손으로 그은 선 →(18px)→ 출처와 쪽수 →(24px)→ 코멘트 →(4px)→ 날짜.
+ * 구성은 문장 →(7px)→ 손으로 그은 선 →(18px)→ 출처와 쪽수 →(24px)→ 코멘트 →(4px)→ 날짜.
  * 손으로 그은 선은 문장과 출처를 가르는 자리에 하나. passage id를 시드로 삼아
  * 매번 다른 파형을 결정적으로 그립니다(같은 문장은 언제 봐도 같은 선).
- * 코멘트는 여러 개가 시간순으로 쌓이며, 출처와 다른 층으로 보이게 여백으로 나눕니다.
  *
- * 두 화면이 같은 카드를 씁니다.
- * - 책 상세: 한 책만 보므로 `source`를 주지 않아 쪽수만. 카드는 링크가 아닙니다.
- * - 밑줄 목록: 여러 책이 섞이므로 `source`로 책 제목·저자를 보이고, `href`로 카드
- *   전체를 그 책 상세로 보냅니다(§5: 막다른 길이 되지 않게).
+ * **배경색(accent_color)·여백·링크는 이 컴포넌트가 갖지 않습니다.** 밑줄이 주인공인
+ * 화면은 색을 카드가 아니라 **밴드/필드(컨테이너)**가 씁니다 (design.md §레이아웃).
+ * - 밑줄 목록: `PassageBand`가 화면 폭 accent 밴드를 두르고 이 내용을 담습니다.
+ * - 책 상세: 오른쪽 accent 필드가 색을 두르고, 문장 사이는 직선 구분선 없이
+ *   여백과 손그림 선으로만 나뉩니다(사용자 결정).
+ * 그래서 여기는 세로 여백만 있는 순수 콘텐츠입니다 — 위/아래 간격은 컨테이너가 줍니다.
  */
 
 type Comment = { id: string; body: string; created_at: string };
@@ -27,33 +26,26 @@ export default function PassageCard({
   id,
   body,
   page,
-  accentColor,
   comments,
   source,
-  href,
   today = false,
-  draw = true,
+  draw = false,
   drawDelay = 0,
 }: {
   id: string;
   body: string;
   page: number | null;
-  accentColor: string | null;
   comments: Comment[];
   /** 밑줄 목록에서만. 출처(책·저자)를 쪽수와 양끝 정렬로 왼쪽에 둡니다. */
   source?: { title: string; author: string | null };
-  /** 주면 카드 전체가 그 책 상세로 가는 링크가 됩니다. */
-  href?: string;
   /**
-   * 오늘의 밑줄 변형 (design.md §오늘의 밑줄). 여백 22/20/16, 문장 16px로
-   * 키웁니다. 나머지 구성(손그림선·출처·양끝 정렬)은 일반 문장 카드와 같습니다.
+   * 오늘의 밑줄 변형 (design.md §오늘의 밑줄). 문장을 16px로 키웁니다.
+   * 여백은 컨테이너가 정하므로 여기서는 글자 크기만 바뀝니다.
    */
   today?: boolean;
   /**
    * 손그림 선을 그어지는 연출로 등장시킬지 (design.md §모션).
-   * **지금은 목록·상세 모두 `false`** — 카드의 밑줄은 처음부터 완성된 전폭 선으로
-   * 보여줍니다(사용자 지시). 그어지는 연출은 저장 완료 같은 순간용으로 남겨둔
-   * 기능이라 prop만 유지합니다.
+   * 목록·상세는 `false` — 처음부터 완성된 전폭 선으로 봅니다(사용자 지시).
    */
   draw?: boolean;
   /** 그어지는 연출을 쓸 때 순차 등장 지연(초). draw가 false면 무시됩니다. */
@@ -76,7 +68,7 @@ export default function PassageCard({
     </div>
   );
 
-  const inner = (
+  return (
     <>
       <p
         className={`font-serif leading-[1.75] text-ink ${
@@ -98,7 +90,7 @@ export default function PassageCard({
 
       {/*
         코멘트는 출처와 다른 층입니다 (design.md). 세로선 대신 여백으로 나눕니다 —
-        시안이 택한 방식이고, 위의 출처 줄과 색·크기 대비가 층을 만듭니다.
+        위의 출처 줄과 색·크기 대비가 층을 만듭니다.
       */}
       {comments.length > 0 && (
         <div className="mt-[24px] flex flex-col gap-4">
@@ -115,24 +107,5 @@ export default function PassageCard({
         </div>
       )}
     </>
-  );
-
-  const className = today
-    ? "block px-[20px] pt-[22px] pb-[16px]"
-    : "block px-[18px] pt-[20px] pb-[14px]";
-  const style = { background: accentColor ?? "var(--color-card)" };
-
-  if (href) {
-    return (
-      <Link href={href} className={className} style={style}>
-        {inner}
-      </Link>
-    );
-  }
-
-  return (
-    <article className={className} style={style}>
-      {inner}
-    </article>
   );
 }
