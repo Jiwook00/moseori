@@ -18,6 +18,9 @@ import SearchOverlay from "./search/search-overlay";
  *
  * 항목 간격 22px은 design.md에 없는 값입니다. 상태 탭과 같은 간격을 써서
  * 리듬을 맞췄습니다.
+ *
+ * **네비는 전체 폭입니다** — 책장이 화면 폭을 쓰는 갤러리라(§5) 네비도 좌우 여백만
+ * 두고 화면을 가로지릅니다. 상세·밑줄의 720 읽기 폭은 그 안에서 가운데로 흐릅니다.
  */
 
 const ITEMS = [
@@ -35,7 +38,7 @@ export default function Nav() {
 
   return (
     <header className="border-line border-b">
-      <nav className="mx-auto flex h-13 w-full max-w-[720px] items-center gap-[22px] px-5 sm:px-7">
+      <nav className="flex h-13 w-full items-center gap-[22px] px-5 sm:px-7">
         {ITEMS.map((item) => {
           const active = pathname.startsWith(item.href);
           return (

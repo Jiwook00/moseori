@@ -34,6 +34,7 @@ export type AladinItem = {
   author?: string;
   publisher?: string;
   pubDate?: string;
+  description?: string;
   cover?: string;
   subInfo?: {
     itemPage?: number;

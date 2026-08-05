@@ -8,12 +8,15 @@ import { createClient } from "@/lib/supabase/server";
 import EmptyShelf from "./empty-shelf";
 import ShelfGrid, { type ShelfBook } from "./shelf-grid";
 import StatusTabs from "./status-tabs";
-import TodaysUnderline from "./todays-underline";
 
 /**
  * 책장 (기획서 §5).
  *
- * 맨 위 오늘의 밑줄(§6) → 상태 탭 4종 → 표지 격자.
+ * 상태 탭 4종 → 표지 격자(화면 폭 갤러리).
+ *
+ * 오늘의 밑줄(§5·§6)은 표지를 크게 쓰면서 자리가 애매해져 **일단 뺐습니다**
+ * (사용자 지시, 2026-08-04). 컴포넌트(`todays-underline.tsx`)는 남겨뒀고, 넓은
+ * 책장에서 어떻게 보일지 정하면 다시 붙입니다.
  *
  * 책이 한 권이라도 있으면 이 화면에 검색 UI는 없습니다. 검색은 네비의 아이콘이 여는
  * 오버레이입니다 (§5). 책이 없을 때만 검색이 화면 전체를 차지합니다.
@@ -35,10 +38,6 @@ export default async function ShelfPage({
   const active: ShelfStatus = isShelfStatus(status) ? status : DEFAULT_STATUS;
 
   const supabase = await createClient();
-
-  // 오늘의 밑줄 시드의 절반. 세션 판정은 getClaims (progress.md).
-  const { data: claims } = await supabase.auth.getClaims();
-  const userId = claims?.claims?.sub;
 
   /*
    * 아카이브된 항목은 책장에 나오지 않습니다 (§5). 상태는 여기서 걸러내지 않고
@@ -84,15 +83,18 @@ export default async function ShelfPage({
   const empty = items.length === 0;
 
   return (
-    <main className="mx-auto w-full max-w-[720px] flex-1 px-5 py-14 sm:px-7">
+    // 책장은 화면 폭을 쓰는 갤러리입니다 (§5). 표지 격자는 넓게 펼치고,
+    // 오늘의 밑줄·상태 탭 같은 읽기 요소는 그 안에서 720 폭으로 묶습니다.
+    <main className="w-full flex-1 px-5 py-14 sm:px-7">
       {empty ? (
-        <EmptyShelf />
+        <div className="mx-auto max-w-[720px]">
+          <EmptyShelf />
+        </div>
       ) : (
         <>
-          {/* 맨 위 오늘의 밑줄 (§5·§6). 밑줄 3개 미만이면 스스로 아무것도 안 그립니다. */}
-          {userId && <TodaysUnderline userId={userId} />}
-
-          <StatusTabs active={active} counts={counts} />
+          <div className="max-w-[720px]">
+            <StatusTabs active={active} counts={counts} />
+          </div>
 
           <div className="mt-9">
             {visible.length > 0 ? (

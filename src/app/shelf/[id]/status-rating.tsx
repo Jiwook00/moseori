@@ -71,7 +71,9 @@ export default function StatusRating({
   const shown = hover ?? rating ?? 0;
 
   return (
-    <section className="border-line mt-12 border-t pt-8">
+    // 상세 헤더의 오른쪽 칼럼 아래에 놓입니다 — 표지 하단선에 맞춰 앉도록
+    // 바깥 구분선·여백은 호출부(page.tsx)가 잡습니다. 여기는 탭+별점만 그립니다.
+    <div>
       {/* 상태: 배경도 밑줄도 없이 굵기와 색으로만 (design.md §상태 탭) */}
       <div className="flex flex-wrap gap-x-[22px] gap-y-2">
         {STATUSES.map(({ value, label }) => {
@@ -96,7 +98,7 @@ export default function StatusRating({
       </div>
 
       {/* 별점 */}
-      <div className="mt-6 flex items-center gap-3">
+      <div className="mt-4 flex items-center gap-3">
         <div
           className="flex items-center gap-1"
           onMouseLeave={() => setHover(null)}
@@ -118,6 +120,6 @@ export default function StatusRating({
       </div>
 
       {error && <p className="text-sub mt-4 text-xs">{error}</p>}
-    </section>
+    </div>
   );
 }

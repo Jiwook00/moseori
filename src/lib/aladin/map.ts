@@ -21,6 +21,7 @@ export type BookInsert = {
   author: string | null;
   publisher: string | null;
   published_at: string | null;
+  description: string | null;
   cover_url: string | null;
   page_count: number | null;
   size_width: number | null;
@@ -65,6 +66,7 @@ export function toBookInsert(item: AladinItem): BookInsert {
     author: text(item.author),
     publisher: text(item.publisher),
     published_at: date(item.pubDate),
+    description: text(item.description),
     cover_url: text(item.cover),
     page_count: int(item.subInfo?.itemPage),
     size_width: int(packing?.sizeWidth),
