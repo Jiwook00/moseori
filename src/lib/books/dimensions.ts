@@ -81,9 +81,6 @@ export const HEIGHT_PER_MM = 0.7;
 /** design.md §표지 격자: 셀 폭. 표지를 이보다 넓게 쓰지 않습니다. */
 export const CELL_WIDTH = 148;
 
-/** design.md §표지 격자: 셀 안 슬롯 높이. 표지를 이 아래 기준선에 맞춥니다. */
-export const SLOT_HEIGHT = 176;
-
 /**
  * 표지 상자 (design.md §표지 격자).
  *
