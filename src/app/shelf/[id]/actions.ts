@@ -4,14 +4,7 @@ import { revalidatePath } from "next/cache";
 import { type ShelfStatus, isShelfStatus } from "@/lib/shelf/status";
 import { createClient } from "@/lib/supabase/server";
 
-/**
- * 책 상세의 변경들.
- *
- * **상태와 별점은 독립입니다** (사용자 지시로 §6의 별점–완독 연동을 제거).
- * 상태를 바꿔도 별점을 묻지 않고, 별점을 매겨도 상태가 바뀌거나 반응이 뜨지
- * 않습니다. 상태 전이의 started_at/finished_at 기록은 그대로 둡니다 — 그건 별점과
- * 무관한 "언제 시작·완독했나"의 기록입니다.
- */
+// 책 상세의 변경들. 상태와 별점은 독립입니다 (§6의 별점–완독 연동은 제거).
 
 export type MutationResult = { ok: true } | { ok: false; error: string };
 
@@ -37,11 +30,7 @@ async function loadItem(
     .maybeSingle<ShelfItemState>();
 }
 
-/**
- * 상태 변경.
- * reading이면 started_at, finished면 finished_at을 찍되 **이미 값이 있으면
- * 덮어쓰지 않습니다** — 처음 시작·완독한 날을 지키기 위함. 별점과는 무관합니다.
- */
+/** 상태 변경. reading/finished면 시작·완독일을 찍되 이미 있으면 덮지 않습니다. */
 export async function setStatus(
   shelfItemId: string,
   next: string,
@@ -62,7 +51,6 @@ export async function setStatus(
     status: next,
     status_changed_at: now,
   };
-  // 이미 값이 있으면 그대로 둡니다. 처음 시작·완독한 날을 지키기 위함.
   if (next === "reading" && !item.started_at) patch.started_at = now;
   if (next === "finished" && !item.finished_at) patch.finished_at = now;
 
@@ -76,9 +64,7 @@ export async function setStatus(
   return { ok: true };
 }
 
-/**
- * 별점. 저장만 합니다 — 상태를 바꾸지 않고 반응도 없습니다.
- */
+/** 별점. 저장만 합니다 — 상태를 바꾸지 않습니다. */
 export async function setRating(
   shelfItemId: string,
   rating: number,
@@ -106,11 +92,7 @@ export async function setRating(
   return { ok: true };
 }
 
-/**
- * 리뷰 저장 (§6 리뷰 에디터). 책당 하나(UNIQUE).
- * 본문이 비면 soft delete합니다 — 살아있는 리뷰만 책당 하나라는 규칙(스키마)에 맞춥니다.
- * updated_at은 여기서 갱신합니다(§6은 트리거가 아니라 앱 레이어).
- */
+/** 리뷰 저장 (§6). 책당 하나. 본문이 비면 soft delete합니다. */
 export async function saveReview(
   shelfItemId: string,
   body: string,
@@ -127,8 +109,7 @@ export async function saveReview(
   const text = body.trim();
   const now = new Date().toISOString();
 
-  // 살아있는 리뷰만 봅니다. deleted_at이 있는 옛 행은 건드리지 않습니다 —
-  // 되살렸다가는 "살아있는 리뷰는 책당 하나"(부분 unique 인덱스)를 깨뜨립니다.
+  // 지워진 옛 행은 되살리지 않습니다 — "살아있는 리뷰는 책당 하나"(부분 unique 인덱스)를 깨뜨립니다.
   const { data: live } = await supabase
     .from("review")
     .select("id")
@@ -137,7 +118,6 @@ export async function saveReview(
     .maybeSingle<{ id: string }>();
 
   if (!text) {
-    // 살아있는 리뷰가 있으면 지웁니다. 없으면 할 일 없음.
     if (live) {
       const { error } = await supabase
         .from("review")
@@ -168,10 +148,7 @@ export async function saveReview(
   return { ok: true };
 }
 
-/**
- * 리뷰 삭제. soft delete만 합니다 (모든 조회는 deleted_at IS NULL).
- * 살아있는 리뷰가 없으면 할 일이 없으므로 그냥 성공입니다.
- */
+/** 리뷰 삭제. soft delete입니다. */
 export async function deleteReview(
   shelfItemId: string,
 ): Promise<MutationResult> {
@@ -214,11 +191,7 @@ const PASSAGE_NOT_FOUND = {
   error: "밑줄을 찾지 못했습니다",
 } as const;
 
-/**
- * 밑줄 수정. 문장과 쪽수만 고칩니다.
- * `passage`에는 updated_at이 없습니다(기획서 §4) — 원문을 옮겨 적은 기록이라
- * "언제 고쳤나"를 남기지 않는 스키마입니다. 임의로 컬럼을 늘리지 않았습니다.
- */
+/** 밑줄 수정. 문장과 쪽수만 고칩니다 (`passage`에는 updated_at이 없습니다 — 기획서 §4). */
 export async function updatePassage(
   passageId: string,
   input: { body: string; page?: number | null },
@@ -250,11 +223,7 @@ export async function updatePassage(
   return { ok: true };
 }
 
-/**
- * 밑줄 삭제. soft delete입니다.
- * 달린 코멘트는 건드리지 않습니다 — 조회가 살아있는 밑줄을 통해서만 코멘트에
- * 닿으므로 함께 사라지고, 밑줄을 되살릴 여지도 남습니다.
- */
+/** 밑줄 삭제. soft delete입니다 — 달린 코멘트는 밑줄을 통해서만 닿으므로 함께 사라집니다. */
 export async function deletePassage(
   passageId: string,
 ): Promise<MutationResult> {
@@ -277,11 +246,7 @@ export async function deletePassage(
   return { ok: true };
 }
 
-/**
- * 밑줄 추가 (§6 밑줄 입력).
- * 문장만 있으면 저장됩니다. 쪽수·코멘트는 선택.
- * 코멘트가 있으면 같은 동작에서 passage_comment 하나를 답니다.
- */
+/** 밑줄 추가 (§6). 문장만 있으면 저장되고, 코멘트가 있으면 passage_comment 하나를 답니다. */
 export async function addPassage(
   shelfItemId: string,
   input: { body: string; page?: number | null; comment?: string },

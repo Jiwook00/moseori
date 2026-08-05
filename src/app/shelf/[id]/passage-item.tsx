@@ -7,24 +7,10 @@ import { deletePassage, updatePassage } from "./actions";
 import GrowTextarea from "./grow-textarea";
 
 /**
- * 책 상세의 밑줄 한 칸. 문장 카드를 감싸 고치기·지우기를 답니다.
- *
- * 카드 자체(`PassageCard`)는 서버 컴포넌트 그대로 `children`으로 받습니다.
- *
- * **평소에는 조작 요소가 보이지 않습니다**(사용자 지시). 카드에 마우스를 올리면
- * 오른쪽 위 모서리에 닫기 표시(`×`)가 나타나고, 카드를 누르면 고치기 화면으로
- * 바뀝니다. 호버가 없는 기기에서는 `×`를 항상 보입니다 — 안 그러면 지울 방법이
- * 사라집니다.
- *
- * `×`는 SVG 아이콘이 아니라 글자입니다. design.md "하지 말 것"의 아이콘 금지에
- * 걸리는 자리라, 활자로 그려 활자 규격 안에 두었습니다.
- *
- * 고치기 모드에서도 그 자리에서 이어 고칩니다 — 읽기와 같은 세리프·손그림 선을 두고
- * 문장 자리에만 투명 textarea를 얹습니다. **accent 색은 이 칸이 아니라 상세의 오른쪽
- * 필드가 두르므로**(design.md §레이아웃) 여기서 배경을 칠하지 않습니다. 투명 위로
- * 필드의 색이 그대로 비쳐, 색 위에 이어 쓰는 감각은 유지됩니다.
- * 코멘트는 이번 범위 밖이라 고치기 모드에서 보이지 않습니다 — 코멘트는 지워지지
- * 않고 그대로 남습니다.
+ * 책 상세의 밑줄 한 칸. 문장 카드(`children`)를 감싸 고치기·지우기를 답니다.
+ * 조작 요소는 평소 숨었다가 호버 시 나타나고(호버 없는 기기는 항상 보임), 카드를
+ * 누르면 그 자리에서 고칩니다 — 읽기와 같은 세리프·손그림 선 위에 투명 textarea만 얹어,
+ * 상세 필드의 accent 색이 그대로 비칩니다.
  */
 export default function PassageItem({
   id,
@@ -88,8 +74,7 @@ export default function PassageItem({
 
   if (editing) {
     return (
-      // 읽기와 같은 세로 리듬(세리프 15px/1.75, 손그림 선 mt-[7px], footer mt-[18px]).
-      // 배경·좌우 여백은 상세의 필드가 주므로 여기선 두지 않습니다.
+      // 읽기 카드와 같은 세로 리듬(세리프 15px/1.75, 선 mt-[7px], footer mt-[18px]).
       <form onSubmit={submit} className="block">
         <GrowTextarea
           value={body}
@@ -134,15 +119,10 @@ export default function PassageItem({
     );
   }
 
+  // pr-7로 오른쪽에 지우기(×)가 앉을 자리를 비웁니다.
   return (
-    // pr-7로 오른쪽에 지우기(×)가 앉을 자리를 비웁니다 — 카드 여백이 없어졌으므로
-    // 문장이 × 밑으로 파고들지 않게 콘텐츠 폭을 조금 줄입니다.
     <div className="group relative pr-7">
-      {/*
-        문장 전체가 고치기로 가는 버튼입니다. 상세의 문장은 링크가 아니라
-        (PassageCard에 href를 주지 않습니다) 안에 다른 조작 요소가 없으므로
-        통째로 감싸도 중첩 문제가 없습니다. 지우기(×)는 형제로 위에 띄웁니다.
-      */}
+      {/* 문장 전체가 고치기 버튼. 지우기(×)는 형제로 위에 띄웁니다. */}
       <button
         type="button"
         onClick={openEditor}
@@ -152,10 +132,7 @@ export default function PassageItem({
         {children}
       </button>
 
-      {/*
-        오른쪽 위 모서리(pr-7이 비운 자리). 문장 첫 줄을 밀지 않습니다.
-        호버가 없는 기기에서는 계속 보입니다.
-      */}
+      {/* 오른쪽 위 모서리(pr-7이 비운 자리). 호버 없는 기기에서는 계속 보입니다. */}
       <div className="absolute top-0 right-0 text-xs opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
         {confirming ? (
           <span className="flex items-center gap-3">

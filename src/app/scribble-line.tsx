@@ -5,19 +5,10 @@ import { scribblePath } from "@/lib/scribble";
 
 /**
  * 손으로 그은 선 (design.md §손으로 그은 선).
- *
- * **폭을 재고 나서 그립니다.** viewBox를 고정해두고 CSS로 늘리면 폭이 넓은 요소만
- * 굴곡이 펴지고 선 굵기도 흐트러집니다. 실제 폭을 재서 1 단위 = 1px로 그려야
- * "폭이 바뀌어도 굴곡 비율과 선 굵기가 유지"됩니다.
- *
- * 재기 전에는 아무것도 그리지 않습니다. 0폭으로 한 번 그리면 선이 튀어나오듯
- * 보입니다.
+ * 요소 폭을 재고 나서 1 단위 = 1px로 그립니다 — viewBox를 고정하고 CSS로 늘리면
+ * 폭이 넓은 요소만 굴곡이 펴집니다. 재기 전에는 아무것도 그리지 않습니다.
  */
 
-/**
- * 선을 담는 높이. design.md §문장 카드의 밑줄이 "높이 12px". 마디점이 위아래로
- * ±2.5px, 끝점 ±2px 흔들려도(design.md) 굵기 2px까지 합쳐 잘리지 않습니다.
- */
 const HEIGHT = 12;
 
 export default function ScribbleLine({
@@ -27,18 +18,12 @@ export default function ScribbleLine({
   animate = false,
   delay = 0,
 }: {
-  /** 대상의 id나 라벨. 같은 시드는 항상 같은 선입니다 */
+  /** 대상의 id나 라벨. 같은 시드는 항상 같은 선입니다. */
   seed: string;
   className?: string;
-  /** design.md: 기본은 밑줄색, 네비는 먹색 */
   stroke?: string;
-  /**
-   * 나타날 때 왼→오른쪽으로 그어집니다 (design.md §모션, 0.7s ease-out).
-   * 네비의 활성 표시는 켜지 않습니다 — 페이지가 바뀔 때마다 다시 그어지면
-   * 산만합니다. 문장 카드 구분선·완독 반응처럼 등장하는 자리에서만 켭니다.
-   */
+  /** 나타날 때 왼→오른쪽으로 그어집니다 (design.md §모션). 네비 활성 표시는 끕니다. */
   animate?: boolean;
-  /** 여러 장이 순차로 나타날 때의 지연(초). */
   delay?: number;
 }) {
   const box = useRef<HTMLSpanElement>(null);

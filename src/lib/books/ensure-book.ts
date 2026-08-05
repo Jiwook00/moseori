@@ -5,10 +5,8 @@ import { COVER_BUCKET } from "@/lib/cover-path";
 import { extensionFor, extractAccentColor, fetchCover } from "@/lib/cover";
 
 /**
- * `book`은 공용 마스터입니다 (기획서 §4). 알라딘에서 받아온 사실 정보를
- * `aladin_item_id` 기준으로 한 번만 저장하고 모든 사용자가 같은 행을 봅니다.
- *
- * 서버 전용입니다 (알라딘 키 · sharp).
+ * `book`은 공용 마스터입니다 (기획서 §4). aladin_item_id 기준으로 한 번만 저장하고
+ * 모든 사용자가 같은 행을 봅니다. 서버 전용입니다 (알라딘 키 · sharp).
  */
 
 /** Postgres unique violation. 같은 책을 두 사람이 동시에 담을 때 납니다. */
@@ -16,10 +14,7 @@ const UNIQUE_VIOLATION = "23505";
 
 /**
  * 표지를 Storage로 복사하고 대표색을 뽑아 book에 채웁니다 (기획서 §7).
- *
- * **실패해도 던지지 않습니다.** 표지가 없다고 책을 담지 못하면 안 됩니다.
- * cover_path와 accent_color는 §4에서 nullable이고, 비어 있으면 다음에 이 책을
- * 담는 사람이 다시 시도합니다.
+ * 실패해도 던지지 않습니다 — 표지가 없다고 담기를 막지 않고, 다음에 담는 사람이 다시 시도합니다.
  */
 async function attachCover(
   supabase: SupabaseClient,
@@ -49,8 +44,7 @@ async function attachCover(
       .update({
         cover_path: path,
         cover_is_large: fetched.isLarge,
-        // §5 격자의 폭 계산과 판형 가로·세로 판정에 씁니다
-        // (src/lib/books/dimensions.ts).
+        // 격자 폭 계산과 판형 가로·세로 판정에 씁니다 (dimensions.ts).
         cover_width: fetched.width,
         cover_height: fetched.height,
         accent_color: await extractAccentColor(fetched.bytes),
@@ -71,13 +65,7 @@ type BookRow = {
 
 const BOOK_COLUMNS = "id, aladin_item_id, cover_url, cover_path, cover_width";
 
-/**
- * 표지를 채워야 하는가.
- *
- * `cover_path`가 비어 있으면 지난번에 실패한 것이고, `cover_width`가 비어 있으면
- * 표지 픽셀 크기를 저장하기 전(마이그레이션 20260730030000 이전)에 담긴 책입니다.
- * 둘 다 다시 받아오면 채워집니다.
- */
+/** 표지를 채워야 하는가. cover_path는 지난번 실패, cover_width는 픽셀 크기 저장 전 책. */
 function needsCover(book: BookRow) {
   return !book.cover_path || !book.cover_width;
 }
@@ -93,10 +81,7 @@ async function findBook(supabase: SupabaseClient, aladinItemId: string) {
 
 /**
  * `aladin_item_id`로 book을 찾고, 없으면 알라딘에서 받아와 만듭니다.
- *
- * 이미 있는 책의 사실 정보는 **다시 쓰지 않습니다.** 알라딘 응답이 바뀔 이유가
- * 거의 없고, 남이 담아둔 행을 매번 덮어쓰면 쓸데없는 write만 늘어납니다.
- * 예외는 표지입니다 — 비어 있으면 이번에 채웁니다 (needsCover).
+ * 이미 있으면 사실 정보는 다시 쓰지 않고 표지만 비어 있을 때 채웁니다 (needsCover).
  */
 export async function ensureBook(
   supabase: SupabaseClient,

@@ -8,10 +8,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * 정적 파일과 이미지 최적화 요청을 뺀 전 경로.
-     * 공개/보호 판정은 updateSession 안에서 합니다.
-     */
+    // 정적 파일·이미지 요청을 뺀 전 경로. 공개/보호 판정은 updateSession이 합니다.
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2)$).*)",
   ],
 };

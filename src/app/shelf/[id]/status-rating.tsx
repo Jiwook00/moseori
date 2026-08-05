@@ -4,15 +4,9 @@ import { useState, useTransition } from "react";
 import { STATUSES } from "@/lib/shelf/status";
 import { setRating, setStatus } from "./actions";
 
-/**
- * 상태와 별점.
- *
- * **둘은 독립입니다** (사용자 지시로 §6의 별점–완독 연동을 제거). 상태를 바꿔도
- * 별점을 묻지 않고, 별점을 매겨도 상태가 바뀌거나 반응이 뜨지 않습니다.
- */
+/** 상태와 별점. 둘은 독립입니다 (§6의 별점–완독 연동은 제거). */
 
 function Star({ filled }: { filled: boolean }) {
-  // 각진 별. design.md는 둥근 모서리를 금합니다.
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>
       <path
@@ -71,8 +65,6 @@ export default function StatusRating({
   const shown = hover ?? rating ?? 0;
 
   return (
-    // 상세 헤더의 오른쪽 칼럼 아래에 놓입니다 — 표지 하단선에 맞춰 앉도록
-    // 바깥 구분선·여백은 호출부(page.tsx)가 잡습니다. 여기는 탭+별점만 그립니다.
     <div>
       {/* 상태: 배경도 밑줄도 없이 굵기와 색으로만 (design.md §상태 탭) */}
       <div className="flex flex-wrap gap-x-[22px] gap-y-2">
@@ -97,7 +89,6 @@ export default function StatusRating({
         })}
       </div>
 
-      {/* 별점 */}
       <div className="mt-4 flex items-center gap-3">
         <div
           className="flex items-center gap-1"

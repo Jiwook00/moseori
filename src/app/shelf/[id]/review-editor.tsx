@@ -5,25 +5,9 @@ import { deleteReview, saveReview } from "./actions";
 import GrowTextarea from "./grow-textarea";
 
 /**
- * 리뷰 에디터 (기획서 §6).
- *
- * 밑줄은 `입력 폼 + 정착 카드`로 나뉘는데 리뷰에는 정착된 모습이 없어, 다 쓴
- * 글도 입력 폼에 갇혀 밑줄 옆에서 유독 미완성처럼 보였습니다. 그래서 세 상태로
- * 나눕니다 — 비어 있음(한 줄 권유) · 읽기(정착) · 쓰기(에디터).
- *
- * 읽기 상태의 조작은 밑줄과 같습니다(passage-item.tsx 참고): 본문을 누르면
- * 고치기로 가고(커서는 `cursor-text`), 호버하면 오른쪽 위에 `×`가 나타나 지웁니다.
- *
- * 리뷰는 내 글이라 책의 색(accent_color)을 입지 않고 종이 위에 산세리프로
- * 흐릅니다(사용자 결정). 남의 문장인 밑줄은 색 블록, 내 글인 리뷰는 색 없음 —
- * 물성으로도 둘을 가릅니다.
- *
- * 서식은 `**굵게**`와 줄바꿈뿐입니다(§6). 읽기 상태에서 렌더하므로, 저장된
- * 리뷰에 `**`가 그대로 보이던 문제가 여기서 풀립니다. 에디터 라이브러리는
- * 붙이지 않습니다 — textarea 하나와 작은 렌더러뿐입니다.
- *
- * 저장은 별점처럼 조용히 읽기 상태로 정착합니다(연출 없음, 사용자 결정).
- * 지우기는 실수로 눌리지 않도록 그 자리에서 한 번 더 묻습니다.
+ * 리뷰 에디터 (기획서 §6). 세 상태로 나눕니다 — 비어 있음(한 줄 권유)·읽기(정착)·쓰기.
+ * 리뷰는 내 글이라 accent 색 없이 종이 위에 산세리프로 흐릅니다(밑줄과 물성으로 구분).
+ * 서식은 `**굵게**`와 줄바꿈뿐이라 에디터 라이브러리 없이 textarea와 작은 렌더러로 냅니다.
  */
 export default function ReviewEditor({
   shelfItemId,
@@ -92,11 +76,6 @@ export default function ReviewEditor({
 
       {editing ? (
         <>
-          {/*
-            리뷰는 내 글이라 종이 위에 흐릅니다(위 주석·design.md §활자). 쓰기
-            상태도 상자로 가두지 않고 읽기 본문과 같은 활자로 그 자리에 이어
-            쓰게 합니다 — 테두리·배경·좌우 여백 없이, placeholder만 은은하게.
-          */}
           <GrowTextarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
@@ -126,11 +105,7 @@ export default function ReviewEditor({
         </>
       ) : savedBody ? (
         <div className="group relative">
-          {/*
-            밑줄과 같은 조작(passage-item.tsx). 리뷰 본문을 통째로 눌러 고치기로
-            갑니다 — 커서는 `cursor-text`라 "여기서 고칠 수 있다"는 신호가 됩니다.
-            지우기(×)는 형제로 위에 띄워 버튼 중첩을 피합니다.
-          */}
+          {/* 밑줄과 같은 조작(passage-item.tsx): 본문을 눌러 고치기, ×는 형제로 띄웁니다. */}
           <button
             type="button"
             onClick={startEditing}
@@ -140,11 +115,7 @@ export default function ReviewEditor({
             {renderReview(savedBody)}
           </button>
 
-          {/*
-            오른쪽 위. 평소엔 숨었다가 호버·포커스에 드러납니다. 호버가 없는
-            기기에서는 계속 보입니다 — 안 그러면 지울 방법이 사라집니다.
-            `×`는 SVG가 아니라 글자입니다(design.md 아이콘 금지 회피).
-          */}
+          {/* 오른쪽 위. 호버 없는 기기에서는 계속 보입니다. ×는 아이콘이 아니라 글자입니다. */}
           <div className="absolute top-0 right-0 text-xs opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
             {confirming ? (
               <span className="flex items-center gap-3">
@@ -192,12 +163,7 @@ export default function ReviewEditor({
   );
 }
 
-/**
- * 리뷰 서식 렌더 (§6 서브셋: `**굵게**`와 줄바꿈뿐).
- *
- * 줄 단위로 나눠 줄바꿈을 살리고, 각 줄에서 `**...**`만 굵게로 바꿉니다.
- * 재독 기록("2028년, 다시 읽음")도 이 굵은 한 줄로 표현됩니다.
- */
+/** 리뷰 서식 렌더 (§6 서브셋). 줄 단위로 나눠 줄바꿈을 살리고 `**...**`만 굵게로 바꿉니다. */
 function renderReview(body: string) {
   return body.split("\n").map((line, lineIndex) => (
     <Fragment key={lineIndex}>

@@ -3,12 +3,8 @@ import { AladinError, normalizeQuery, searchBooks } from "@/lib/aladin/client";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * 책 검색 (기획서 §7).
- *
- * 알라딘 키가 서버에만 있어야 하므로 브라우저는 이 경로를 통해서만 검색합니다.
- *
- * 결과마다 `shelfItemId`를 붙입니다. 이미 서재에 있는 책을 "이미 서재에 있어요"로
- * 안내하고(§5), 누르면 그 책의 상세로 보내려면 id가 필요합니다.
+ * 책 검색 (기획서 §7). 알라딘 키가 서버 전용이라 브라우저는 이 경로로만 검색합니다.
+ * 결과마다 `shelfItemId`를 붙여 "이미 서재에 있어요"를 안내합니다 (§5).
  */
 
 export type SearchResult = {
@@ -54,7 +50,6 @@ export async function GET(request: NextRequest) {
 
   const aladinItemIds = items.map((item) => String(item.itemId));
 
-  // 내 서재와 대조합니다. 한 번의 조회로 끝냅니다.
   const { data: mine } = await supabase
     .from("shelf_item")
     .select("id, book:book!inner(aladin_item_id)")

@@ -7,22 +7,11 @@ import type { SearchResult } from "@/app/api/search/route";
 import { STATUSES } from "@/lib/shelf/status";
 
 /**
- * 책 검색과 담기 (기획서 §5 · §7).
- *
- * 검색 오버레이와 빈 책장이 같은 것을 씁니다. 껍데기(덮개냐 화면 한가운데냐)만
- * 다르고 안에서 일어나는 일은 하나입니다.
- *
- * **검색 → 상태 고르기, 두 번의 탭.** §5는 결과를 눌러 상태를 펼치는 세 번을
- * 적어두었지만, 고를 것이 셋뿐이라 처음부터 꺼내 둡니다 (사용자 지시).
- *
- * 담으면 목록으로 돌아가지 않고 그 책의 상세로 갑니다 (§5).
+ * 책 검색과 담기 (기획서 §5 · §7). 검색 오버레이와 빈 책장이 이 컴포넌트를 함께 쓰고,
+ * `variant`로 껍데기만 다릅니다. 담으면 목록이 아니라 그 책 상세로 갑니다.
  */
 
-/**
- * 담을 때 고를 수 있는 상태. **`덮어둠`은 뺍니다** (사용자 지시) — 방금 찾은 책을
- * 덮어두며 담는 일은 없습니다. 읽다가 멈춘 책의 상태이므로 책 상세에서 바꿉니다.
- * 탭 4종(`STATUSES`)은 그대로입니다.
- */
+/** 담을 때 고를 상태. `덮어둠`은 뺍니다 (읽다 멈춘 책의 상태라 담을 때 고를 일이 없음). */
 const ADD_STATUSES = STATUSES.filter(({ value }) => value !== "set_aside");
 
 export default function BookSearch({
@@ -31,16 +20,11 @@ export default function BookSearch({
   onDone,
   onClose,
 }: {
-  /**
-   * `inline`은 흐름 안에 그대로 놓입니다 (빈 책장).
-   * `overlay`는 입력창을 위에 고정한 덮개 틀이 됩니다 — 입력창과 결과가 서로
-   * 다른 부모에 들어가야 해서 껍데기를 여기서 나눕니다.
-   */
+  /** `inline`은 흐름 안에(빈 책장), `overlay`는 입력창을 위에 고정한 덮개 틀. */
   variant?: "inline" | "overlay";
   autoFocus?: boolean;
   /** 담기 직전에 부릅니다. 오버레이가 자기를 닫는 자리. */
   onDone?: () => void;
-  /** overlay에서만. 상단 줄 오른쪽 끝 `닫기`. */
   onClose?: () => void;
 }) {
   const router = useRouter();
@@ -102,7 +86,6 @@ export default function BookSearch({
         onChange={(event) => setQuery(event.target.value)}
         placeholder="책 제목이나 저자"
         aria-label="책 검색"
-        // §5: 오버레이가 열리면 입력창에 커서가 들어가 있습니다
         autoFocus={autoFocus}
         className="placeholder:text-sub/70 min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none"
       />
@@ -125,13 +108,7 @@ export default function BookSearch({
           {results.map((result) => {
             const adding = addingId === result.aladinItemId;
 
-            /*
-             * 표지와 서지 정보. 검색 결과는 next/image를 쓰지 않습니다. 아직 담지
-             * 않은 책이라 표지의 실제 픽셀 크기를 모르는데, next/image는
-             * width·height를 요구합니다. 아무 값이나 적으면 비율이 틀리고(문고본·
-             * 사진집이 다 다릅니다) 개발 콘솔에 경고가 쌓입니다. 담긴 뒤에는
-             * book.cover_width / cover_height가 있으므로 그때부터 씁니다.
-             */
+            // 아직 담지 않은 책이라 표지 픽셀 크기를 몰라 next/image를 쓸 수 없습니다.
             const cover = result.cover ? (
               // self-start가 없으면 items-stretch에 눌려 표지 비율이 망가집니다.
               // eslint-disable-next-line @next/next/no-img-element
@@ -173,11 +150,7 @@ export default function BookSearch({
                   <div className="flex gap-5">
                     {cover}
 
-                    {/*
-                     * 상태 셋은 저자 아래, 표지 옆 여백에 처음부터 나와 있습니다.
-                     * 누를 것이 하나뿐이라 펼치는 단계를 두지 않습니다 —
-                     * **검색 → 상태 고르기, 두 번**입니다 (사용자 지시).
-                     */}
+                    {/* 상태 셋을 처음부터 꺼내 둡니다 — 검색 → 상태 고르기, 두 번의 탭. */}
                     <div className="min-w-0 flex-1">
                       <p className="text-[15px] leading-snug">{result.title}</p>
                       <p className="text-sub mt-1.5 text-[12px] leading-relaxed">
@@ -234,11 +207,7 @@ export default function BookSearch({
     );
   }
 
-  /*
-   * 흐름 안에 놓일 때는 입력창 아래를 **손으로 그은 선**으로 받칩니다. 빈 책장에서
-   * 이 입력창이 화면의 유일한 물건이라 자로 그은 1px보다 이쪽이 맞습니다.
-   * 오버레이의 입력창은 상단 줄의 경계선이 이미 있어 겹쳐 쓰지 않습니다.
-   */
+  // 흐름 안(빈 책장)에서는 입력창 아래를 손으로 그은 선으로 받칩니다.
   return (
     <>
       <div className="flex items-center">{form}</div>

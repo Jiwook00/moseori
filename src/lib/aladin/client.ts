@@ -1,18 +1,7 @@
 /**
- * 알라딘 TTB API 클라이언트 (기획서 §7).
- *
- * **`ALADIN_TTB_KEY`를 읽는 유일한 곳입니다.** 이 파일은 서버에서만 import하세요
- * (Route Handler · 서버 컴포넌트 · 서버 액션). 클라이언트 컴포넌트에서 import하면
- * 키가 번들에 실립니다.
- *
- * 두 번 호출합니다. 쪽수(subInfo.itemPage)와 판형(subInfo.packing)이 검색 응답에는
- * 없고 상품 조회 응답에만 있습니다.
- *
- *   검색할 때      ItemSearch.aspx   표지·제목·저자·출판사·ISBN
- *   서재에 담을 때  ItemLookUp.aspx   쪽수, 판형
- *
- * 하루 5,000회 제한이 있습니다. book 캐시가 있어 같은 책의 조회는 평생 한 번이고,
- * 병목은 검색이라 같은 검색어의 결과를 4시간 캐시합니다 (searchBooks 주석 참조).
+ * 알라딘 TTB API 클라이언트 (기획서 §7). `ALADIN_TTB_KEY`를 읽는 유일한 곳이라
+ * 서버에서만 import하세요 (클라이언트에서 import하면 키가 번들에 실립니다).
+ * 두 엔드포인트 — 검색(ItemSearch)과 상품 조회(ItemLookUp). 쪽수·판형은 후자에만 있습니다.
  */
 
 const BASE = "https://www.aladin.co.kr/ttb/api";
@@ -130,23 +119,14 @@ async function call(
   return parsed;
 }
 
-/**
- * 검색어를 캐시 키로 쓰기 좋게 다듬습니다.
- * 앞뒤 공백과 중복 공백을 없애고 소문자로 만듭니다 — "Norwegian Wood"와
- * "norwegian  wood"가 같은 캐시를 쓰게 하려는 것뿐입니다. 한글에는 영향이 없습니다.
- */
+/** 검색어를 캐시 키로 다듬습니다. 공백 정리 + 소문자화라 표기만 다른 검색이 캐시를 공유합니다. */
 export function normalizeQuery(raw: string) {
   return raw.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
 /**
- * 검색 (기획서 §7).
- *
- * `outofStockfilter`를 켜지 않습니다 — 절판된 책도 담아야 합니다.
- *
- * 캐시는 Next Data Cache에 맡깁니다. 별도 테이블을 두지 않는 이유는 URL이 그대로
- * 캐시 키이기 때문입니다. normalizeQuery를 거친 검색어만 여기 들어오므로
- * 같은 검색은 같은 URL이 됩니다.
+ * 검색 (기획서 §7). 절판된 책도 담아야 해 outofStockfilter는 끕니다.
+ * 캐시는 URL을 키로 쓰는 Next Data Cache에 맡깁니다 (normalizeQuery로 URL이 통일됨).
  */
 export async function searchBooks(query: string) {
   const body = await call(
@@ -166,10 +146,8 @@ export async function searchBooks(query: string) {
 }
 
 /**
- * 상품 조회 (기획서 §7). 쪽수와 판형을 받으려고 부릅니다.
- *
- * 캐시하지 않습니다. 결과가 book 테이블에 들어가므로 같은 책을 다시 부를 일이
- * 없습니다 — Data Cache에 남겨두면 이미 저장된 값의 사본만 늘어납니다.
+ * 상품 조회 (기획서 §7). 쪽수와 판형을 받으려고 부릅니다. 결과가 book에 저장돼
+ * 같은 책을 다시 부를 일이 없으므로 캐시하지 않습니다.
  */
 export async function lookUpBook(aladinItemId: string) {
   const body = await call(

@@ -1,18 +1,9 @@
 import type { AladinItem } from "./client";
 
 /**
- * 알라딘 응답 → book 행 (기획서 §7 매핑표).
- *
- * 표에 있는 것만 옮깁니다. 가공하지 않습니다 —
- *
- * - `author`는 파싱하지 않습니다. "홍길동 (지은이), 김철수 (옮긴이)" 원문 그대로입니다
- * - `sizeWidth` / `sizeHeight`도 손대지 않습니다. 알라딘이 가로·세로를 뒤바꿔 주는
- *   책이 실제로 있지만(같은 문고본이 128x188인 것도 188x128인 것도 있습니다)
- *   여기는 알라딘이 준 사실을 적는 자리입니다. 보정은 화면 쪽 문제입니다
- * - 전체 응답은 `raw`에 통째로 들어갑니다
- *
- * `cover_path` · `cover_is_large` · `accent_color`는 여기서 채우지 않습니다.
- * 표지를 Storage로 복사한 뒤에 정해지는 값입니다 (`src/lib/cover.ts`).
+ * 알라딘 응답 → book 행 (기획서 §7 매핑표). 가공하지 않고 준 사실 그대로 적습니다 —
+ * author 파싱도, size 보정(알라딘은 가로·세로를 뒤바꿔 주기도 함)도 화면 쪽 일입니다.
+ * cover_path·cover_is_large·accent_color는 표지를 복사한 뒤 정해집니다 (`cover.ts`).
  */
 export type BookInsert = {
   aladin_item_id: string;
@@ -46,10 +37,7 @@ function int(value: unknown): number | null {
   return Math.round(parsed);
 }
 
-/**
- * pubDate → date. 알라딘은 "2014-05-19"로 주지만 결측이거나 형태가 다른 책이
- * 있어 그런 값은 버립니다. published_at은 nullable입니다.
- */
+/** pubDate → date. 결측이거나 "YYYY-MM-DD" 꼴이 아니면 버립니다 (nullable). */
 function date(value: unknown): string | null {
   const raw = text(value);
   if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;

@@ -1,11 +1,6 @@
 import { SignInButton } from "./sign-in-button";
 
-/**
- * 랜딩 (기획서 §5). 로그인하지 않은 사람이 보는 유일한 화면.
- * 로그인한 사람은 미들웨어가 /shelf로 보냅니다.
- *
- * 화면 디자인은 다음 세션입니다. 지금은 구조와 문구만 있습니다.
- */
+/** 랜딩 (기획서 §5). 미인증 전용 — 로그인한 사람은 proxy가 /shelf로 보냅니다. */
 export default async function LandingPage({
   searchParams,
 }: {

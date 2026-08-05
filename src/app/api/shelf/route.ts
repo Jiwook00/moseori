@@ -4,17 +4,8 @@ import { ensureBook } from "@/lib/books/ensure-book";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * 책 담기 (기획서 §5 · §7).
- *
- *   검색 → 표지 누르기 → 상태 고르기 → 닫힘
- *
- * 하는 일:
- * 1. 이미 서재에 있으면 그대로 알려줍니다 (상태를 덮어쓰지 않습니다)
- * 2. book이 없으면 ItemLookUp으로 받아와 만들고 표지를 Storage로 복사합니다
- * 3. shelf_item을 만듭니다
- *
- * 응답의 shelfItemId로 그 책의 상세로 이동합니다 — 방금 담은 책이 눈앞에
- * 펼쳐져야 합니다 (§5).
+ * 책 담기 (기획서 §5 · §7). book이 없으면 알라딘에서 받아와 만들고(표지 복사 포함)
+ * shelf_item을 만듭니다. 이미 서재에 있으면 상태를 덮지 않고 그대로 알려줍니다.
  */
 
 const STATUSES = ["wishlist", "reading", "finished", "set_aside"] as const;
@@ -74,8 +65,7 @@ export async function POST(request: Request) {
     throw error;
   }
 
-  // 이미 서재에 있는 책 (§5). 상태도 별점도 건드리지 않습니다 —
-  // 담기는 새로 담는 동작이고, 상태 변경은 책 상세에서 하는 일입니다.
+  // 이미 서재에 있으면 상태·별점을 건드리지 않습니다 — 상태 변경은 책 상세의 일입니다 (§5).
   const { data: existing } = await supabase
     .from("shelf_item")
     .select("id")

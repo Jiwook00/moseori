@@ -10,16 +10,8 @@ import ShelfGrid, { type ShelfBook } from "./shelf-grid";
 import StatusTabs from "./status-tabs";
 
 /**
- * 책장 (기획서 §5).
- *
- * 상태 탭 4종 → 표지 격자(화면 폭 갤러리).
- *
- * 오늘의 밑줄(§5·§6)은 표지를 크게 쓰면서 자리가 애매해져 **일단 뺐습니다**
- * (사용자 지시, 2026-08-04). 컴포넌트(`todays-underline.tsx`)는 남겨뒀고, 넓은
- * 책장에서 어떻게 보일지 정하면 다시 붙입니다.
- *
- * 책이 한 권이라도 있으면 이 화면에 검색 UI는 없습니다. 검색은 네비의 아이콘이 여는
- * 오버레이입니다 (§5). 책이 없을 때만 검색이 화면 전체를 차지합니다.
+ * 책장 (기획서 §5). 상태 탭 4종 → 표지 격자. 검색 UI는 책이 없을 때만 화면을 채우고,
+ * 있으면 네비 아이콘이 여는 오버레이가 맡습니다. 오늘의 밑줄은 일단 뺐습니다(progress.md).
  */
 
 type Row = {
@@ -39,14 +31,7 @@ export default async function ShelfPage({
 
   const supabase = await createClient();
 
-  /*
-   * 아카이브된 항목은 책장에 나오지 않습니다 (§5). 상태는 여기서 걸러내지 않고
-   * 전부 받아옵니다 — 탭 4개의 개수를 같은 결과에서 세기 위해서입니다. 한 사람의
-   * 서재라 권수가 적고, 탭을 옮길 때마다 다섯 번 세는 것보다 낫습니다.
-   *
-   * 밑줄 개수는 `passage`의 id를 받아 셉니다. 지운 밑줄은 세지 않습니다
-   * (§4 공통 규칙 — 모든 조회에 `deleted_at IS NULL`).
-   */
+  // 상태로 거르지 않고 전부 받아 탭 4개의 개수를 한 결과에서 셉니다 (아카이브만 제외, §5).
   const { data, error } = await supabase
     .from("shelf_item")
     .select(
@@ -79,12 +64,10 @@ export default async function ShelfPage({
 
   const visible = items.filter((item) => item.status === active);
 
-  // 빈 책장에는 검색창 말고 아무것도 두지 않습니다 (§5). 탭도, 오늘의 밑줄 자리도.
   const empty = items.length === 0;
 
   return (
-    // 책장은 화면 폭을 쓰는 갤러리입니다 (§5). 표지 격자는 넓게 펼치고,
-    // 오늘의 밑줄·상태 탭 같은 읽기 요소는 그 안에서 720 폭으로 묶습니다.
+    // 화면 폭 갤러리 — 표지 격자는 넓게, 상태 탭 같은 읽기 요소는 그 안에서 720 폭으로 (§5).
     <main className="w-full flex-1 px-5 py-14 sm:px-7">
       {empty ? (
         <div className="mx-auto max-w-[720px]">
@@ -106,10 +89,7 @@ export default async function ShelfPage({
         </>
       )}
 
-      {/*
-        로그아웃은 §5에서 설정 화면의 것입니다. /settings가 아직 없어서 여기 남겨둡니다 —
-        설정을 만들 때 옮깁니다.
-      */}
+      {/* 로그아웃은 원래 설정 화면의 것 — /settings를 만들 때 옮깁니다 (§5). */}
       <form action="/auth/signout" method="post" className="mt-20">
         <button type="submit" className="text-sub text-[11px]">
           로그아웃
