@@ -1,16 +1,21 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { addPassage } from "./actions";
 import GrowTextarea from "./grow-textarea";
+import type { PassageWithComments } from "./passage-list";
 
 /**
  * 밑줄 추가 (기획서 §6 밑줄 입력 · §5). 문장만 있으면 저장되고, 쪽수·코멘트는 선택
  * (코멘트란은 접힌 채 시작). 손그림 선은 저장돼 카드가 될 때 생기므로 입력 중엔 없습니다.
  */
-export default function AddPassage({ shelfItemId }: { shelfItemId: string }) {
-  const router = useRouter();
+export default function AddPassage({
+  shelfItemId,
+  addOptimistic,
+}: {
+  shelfItemId: string;
+  addOptimistic: (passage: PassageWithComments) => void;
+}) {
   const [body, setBody] = useState("");
   const [page, setPage] = useState("");
   const [comment, setComment] = useState("");
@@ -22,22 +27,41 @@ export default function AddPassage({ shelfItemId }: { shelfItemId: string }) {
     event.preventDefault();
     if (pending || !body.trim()) return;
     setError(null);
+
     const pageNum = page.trim() ? Number(page.trim()) : null;
+    const trimmedComment = showComment ? comment.trim() : "";
+    const snapshot = { body, page, comment, showComment };
+
+    // 입력폼을 즉시 비워 '바로 그어졌다'는 감을 준다. 실패하면 아래에서 값을 되돌린다.
+    setBody("");
+    setPage("");
+    setComment("");
+    setShowComment(false);
+
     startTransition(async () => {
-      const result = await addPassage(shelfItemId, {
-        body,
+      const now = new Date().toISOString();
+      addOptimistic({
+        id: `optimistic-${crypto.randomUUID()}`,
+        body: snapshot.body.trim(),
         page: pageNum,
-        comment: showComment ? comment : undefined,
+        created_at: now,
+        comments: trimmedComment
+          ? [{ id: `optimistic-${now}`, body: trimmedComment, created_at: now }]
+          : [],
+      });
+
+      const result = await addPassage(shelfItemId, {
+        body: snapshot.body,
+        page: pageNum,
+        comment: snapshot.showComment ? snapshot.comment : undefined,
       });
       if (!result.ok) {
+        setBody(snapshot.body);
+        setPage(snapshot.page);
+        setComment(snapshot.comment);
+        setShowComment(snapshot.showComment);
         setError(result.error);
-        return;
       }
-      setBody("");
-      setPage("");
-      setComment("");
-      setShowComment(false);
-      router.refresh();
     });
   }
 

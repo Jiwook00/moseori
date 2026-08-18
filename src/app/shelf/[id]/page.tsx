@@ -4,9 +4,7 @@ import { notFound } from "next/navigation";
 import { coverPublicUrl } from "@/lib/cover-path";
 import { fetchCommentsByPassage } from "@/lib/passage/comments";
 import { createClient } from "@/lib/supabase/server";
-import PassageCard from "@/app/passage-card";
-import AddPassage from "./add-passage";
-import PassageItem from "./passage-item";
+import PassageList from "./passage-list";
 import ReviewEditor from "./review-editor";
 import StatusRating from "./status-rating";
 
@@ -77,6 +75,10 @@ export default async function BookDetailPage({
     supabase,
     passageRows.map((p) => p.id),
   );
+  const passagesWithComments = passageRows.map((passage) => ({
+    ...passage,
+    comments: commentsByPassage.get(passage.id) ?? [],
+  }));
 
   const facts = [
     book.publisher,
@@ -134,36 +136,10 @@ export default async function BookDetailPage({
           style={{ background: book.accent_color ?? "var(--color-card)" }}
         >
           <div className="max-w-[680px]">
-            <p className="text-sub text-[10.5px] tracking-[0.09em]">
-              밑줄{passageRows.length > 0 ? ` ${passageRows.length}` : ""}
-            </p>
-
-            {passageRows.length === 0 ? (
-              <p className="text-sub mt-4 text-sm">
-                아직 밑줄이 없습니다. 좋았던 문장을 그어보세요.
-              </p>
-            ) : (
-              <div className="mt-6 flex flex-col gap-8">
-                {passageRows.map((passage) => (
-                  <PassageItem
-                    key={passage.id}
-                    id={passage.id}
-                    body={passage.body}
-                    page={passage.page}
-                  >
-                    <PassageCard
-                      id={passage.id}
-                      body={passage.body}
-                      page={passage.page}
-                      comments={commentsByPassage.get(passage.id) ?? []}
-                      draw={false}
-                    />
-                  </PassageItem>
-                ))}
-              </div>
-            )}
-
-            <AddPassage shelfItemId={data.id} />
+            <PassageList
+              shelfItemId={data.id}
+              passages={passagesWithComments}
+            />
           </div>
         </div>
       </div>
