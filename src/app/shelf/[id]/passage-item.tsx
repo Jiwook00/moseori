@@ -94,7 +94,7 @@ export default function PassageItem({
         {/* 읽기 카드와 같은 자리의 손그림 선. 같은 시드라 같은 파형입니다. */}
         <ScribbleLine seed={id} className="mt-[7px] block" />
 
-        {/* 색 카드 위 컨트롤 칩(쪽수·취소·고침). footer 자리(mt-[18px])에 둡니다. */}
+        {/* 색 카드 위 컨트롤 칩(쪽수·제거·취소·고침). footer 자리(mt-[18px])에 둡니다. */}
         <div className="mt-[18px] flex items-center gap-3">
           <input
             value={page}
@@ -107,6 +107,34 @@ export default function PassageItem({
             className="border-line bg-card placeholder:text-sub/70 w-16 border px-2 py-1 text-xs outline-none"
           />
           {error && <span className="text-sub text-xs">{error}</span>}
+          {confirming ? (
+            <span className="flex items-center gap-3 text-xs">
+              <span className="text-sub">지울까요?</span>
+              <button
+                type="button"
+                onClick={remove}
+                disabled={pending}
+                className="text-sub hover:text-ink disabled:opacity-40"
+              >
+                지움
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirming(false)}
+                className="text-sub hover:text-ink"
+              >
+                아니오
+              </button>
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              className="text-sub hover:text-ink text-xs"
+            >
+              제거
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setEditing(false)}
@@ -126,10 +154,9 @@ export default function PassageItem({
     );
   }
 
-  // pr-7로 오른쪽에 지우기(×)가 앉을 자리를 비웁니다.
   return (
-    <div className="group relative pr-7">
-      {/* 문장 전체가 고치기 버튼. 지우기(×)는 형제로 위에 띄웁니다. */}
+    <div className="relative">
+      {/* 문장 전체가 고치기 버튼. 지우기는 편집기 안에서 합니다. */}
       <button
         type="button"
         onClick={openEditor}
@@ -138,39 +165,6 @@ export default function PassageItem({
       >
         {children}
       </button>
-
-      {/* 오른쪽 위 모서리(pr-7이 비운 자리). 호버 없는 기기에서는 계속 보입니다. */}
-      <div className="absolute top-0 right-0 text-xs opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
-        {confirming ? (
-          <span className="flex items-center gap-3">
-            <span className="text-sub">지울까요?</span>
-            <button
-              type="button"
-              onClick={remove}
-              disabled={pending}
-              className="hover:text-ink disabled:opacity-40"
-            >
-              지움
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirming(false)}
-              className="text-sub hover:text-ink"
-            >
-              취소
-            </button>
-          </span>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setConfirming(true)}
-            aria-label="이 밑줄 지우기"
-            className="text-sub hover:text-ink px-1 text-base leading-none"
-          >
-            ×
-          </button>
-        )}
-      </div>
 
       {error && <p className="text-sub mt-2 text-xs">{error}</p>}
     </div>
