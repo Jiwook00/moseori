@@ -42,8 +42,9 @@ export default function AddPassage({ shelfItemId }: { shelfItemId: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="mt-9">
-      <div className="block">
+    <form onSubmit={submit} className="mt-10">
+      {/* 종이 면으로 accent 필드 위에 띄운다 — '쓰는 곳'을 '쌓인 곳'과 색으로 가른다. */}
+      <div className="bg-card border-line border p-5 sm:p-6">
         <GrowTextarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
@@ -60,7 +61,7 @@ export default function AddPassage({ shelfItemId }: { shelfItemId: string }) {
             inputMode="numeric"
             placeholder="쪽"
             aria-label="쪽수 (선택)"
-            className="border-line bg-card placeholder:text-sub/70 w-16 border px-2 py-1 text-xs outline-none"
+            className="border-line placeholder:text-sub/70 w-16 border bg-transparent px-2 py-1 text-xs outline-none"
           />
           {!showComment && (
             <button
