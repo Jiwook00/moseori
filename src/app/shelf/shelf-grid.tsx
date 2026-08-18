@@ -31,7 +31,7 @@ export type ShelfBook = {
 
 export default function ShelfGrid({ items }: { items: ShelfBook[] }) {
   return (
-    <ul className="grid max-w-[1600px] grid-cols-1 gap-x-10 gap-y-14 min-[440px]:grid-cols-2 min-[900px]:grid-cols-4">
+    <ul className="grid max-w-[1600px] grid-cols-2 gap-x-6 gap-y-14 min-[440px]:gap-x-10 min-[900px]:grid-cols-4">
       {items.map((item) => {
         const { book } = item;
         const box = coverBox(book);
