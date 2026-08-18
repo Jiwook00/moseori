@@ -5,6 +5,7 @@ import { coverPublicUrl } from "@/lib/cover-path";
 import { fetchCommentsByPassage } from "@/lib/passage/comments";
 import { createClient } from "@/lib/supabase/server";
 import PassageList from "./passage-list";
+import ReadingPeriod from "./reading-period";
 import ReviewEditor from "./review-editor";
 import StatusRating from "./status-rating";
 
@@ -14,6 +15,8 @@ const COVER_W = 220;
 type ShelfItemDetail = {
   id: string;
   status: string;
+  started_at: string | null;
+  finished_at: string | null;
   rating: number | null;
   book: {
     title: string;
@@ -45,7 +48,7 @@ export default async function BookDetailPage({
   const { data } = await supabase
     .from("shelf_item")
     .select(
-      "id, status, rating, book:book(title, author, publisher, page_count, cover_width, cover_height, cover_path, accent_color)",
+      "id, status, started_at, finished_at, rating, book:book(title, author, publisher, page_count, cover_width, cover_height, cover_path, accent_color)",
     )
     .eq("id", id)
     .maybeSingle<ShelfItemDetail>();
@@ -121,6 +124,12 @@ export default async function BookDetailPage({
               shelfItemId={data.id}
               initialStatus={data.status}
               initialRating={data.rating}
+            />
+            <ReadingPeriod
+              key={`${data.started_at}-${data.finished_at}`}
+              shelfItemId={data.id}
+              initialStarted={data.started_at}
+              initialFinished={data.finished_at}
             />
           </div>
 

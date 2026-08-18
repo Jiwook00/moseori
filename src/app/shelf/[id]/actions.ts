@@ -64,6 +64,54 @@ export async function setStatus(
   return { ok: true };
 }
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** "YYYY-MM-DD" → 정오 KST의 timestamptz. 정오라 표시(Asia/Seoul)에서 날짜가 밀리지 않습니다. */
+function dateToStamp(date: string | null): string | null {
+  return date ? new Date(`${date}T12:00:00+09:00`).toISOString() : null;
+}
+
+/**
+ * 읽은 기간을 직접 남깁니다. started_at/finished_at을 재사용하되, 상태 전이가
+ * 자동으로 찍던 것(§6)과 달리 사용자가 덮어쓸 수 있습니다.
+ */
+export async function setReadingDates(
+  shelfItemId: string,
+  input: { startedAt: string | null; finishedAt: string | null },
+): Promise<MutationResult> {
+  const { startedAt, finishedAt } = input;
+  if (
+    (startedAt && !DATE_RE.test(startedAt)) ||
+    (finishedAt && !DATE_RE.test(finishedAt))
+  ) {
+    return { ok: false, error: "날짜 형식이 올바르지 않습니다" };
+  }
+  if (startedAt && finishedAt && startedAt > finishedAt) {
+    return { ok: false, error: "시작한 날이 다 읽은 날보다 뒤입니다" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return UNAUTH;
+
+  const { data: item } = await loadItem(supabase, shelfItemId);
+  if (!item) return NOT_FOUND;
+
+  const { error } = await supabase
+    .from("shelf_item")
+    .update({
+      started_at: dateToStamp(startedAt),
+      finished_at: dateToStamp(finishedAt),
+    })
+    .eq("id", shelfItemId);
+  if (error) return { ok: false, error: "읽은 기간을 저장하지 못했습니다" };
+
+  revalidatePath(`/shelf/${shelfItemId}`);
+  return { ok: true };
+}
+
 /** 별점. 저장만 합니다 — 상태를 바꾸지 않습니다. */
 export async function setRating(
   shelfItemId: string,
