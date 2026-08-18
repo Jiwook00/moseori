@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import ScribbleLine from "@/app/scribble-line";
 import { deletePassage, updatePassage } from "./actions";
 import GrowTextarea from "./grow-textarea";
+import type { OptimisticAction } from "./passage-list";
 
 /**
  * 책 상세의 밑줄 한 칸. 문장 카드(`children`)를 감싸 고치기·지우기를 답니다.
@@ -16,14 +16,15 @@ export default function PassageItem({
   id,
   body: initialBody,
   page: initialPage,
+  applyOptimistic,
   children,
 }: {
   id: string;
   body: string;
   page: number | null;
+  applyOptimistic: (action: OptimisticAction) => void;
   children: React.ReactNode;
 }) {
-  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [body, setBody] = useState(initialBody);
@@ -45,17 +46,25 @@ export default function PassageItem({
     event.preventDefault();
     if (pending || !body.trim()) return;
     setError(null);
+
+    const pageNum = page.trim() ? Number(page.trim()) : null;
+    const snapshot = { body, page };
+
+    // 카드를 즉시 새 값으로 바꾸고 편집기를 닫는다. 실패하면 아래에서 편집기를 되연다.
+    setEditing(false);
     startTransition(async () => {
+      applyOptimistic({ type: "update", id, body: body.trim(), page: pageNum });
+
       const result = await updatePassage(id, {
-        body,
-        page: page.trim() ? Number(page.trim()) : null,
+        body: snapshot.body,
+        page: pageNum,
       });
       if (!result.ok) {
+        setBody(snapshot.body);
+        setPage(snapshot.page);
+        setEditing(true);
         setError(result.error);
-        return;
       }
-      setEditing(false);
-      router.refresh();
     });
   }
 
@@ -63,12 +72,10 @@ export default function PassageItem({
     if (pending) return;
     setError(null);
     startTransition(async () => {
+      applyOptimistic({ type: "delete", id });
+
       const result = await deletePassage(id);
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      router.refresh();
+      if (!result.ok) setError(result.error);
     });
   }
 

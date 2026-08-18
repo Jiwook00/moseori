@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { addPassage } from "./actions";
 import GrowTextarea from "./grow-textarea";
-import type { PassageWithComments } from "./passage-list";
+import type { OptimisticAction } from "./passage-list";
 
 /**
  * 밑줄 추가 (기획서 §6 밑줄 입력 · §5). 문장만 있으면 저장되고, 쪽수·코멘트는 선택
@@ -11,10 +11,10 @@ import type { PassageWithComments } from "./passage-list";
  */
 export default function AddPassage({
   shelfItemId,
-  addOptimistic,
+  applyOptimistic,
 }: {
   shelfItemId: string;
-  addOptimistic: (passage: PassageWithComments) => void;
+  applyOptimistic: (action: OptimisticAction) => void;
 }) {
   const [body, setBody] = useState("");
   const [page, setPage] = useState("");
@@ -40,14 +40,23 @@ export default function AddPassage({
 
     startTransition(async () => {
       const now = new Date().toISOString();
-      addOptimistic({
-        id: `optimistic-${crypto.randomUUID()}`,
-        body: snapshot.body.trim(),
-        page: pageNum,
-        created_at: now,
-        comments: trimmedComment
-          ? [{ id: `optimistic-${now}`, body: trimmedComment, created_at: now }]
-          : [],
+      applyOptimistic({
+        type: "add",
+        passage: {
+          id: `optimistic-${crypto.randomUUID()}`,
+          body: snapshot.body.trim(),
+          page: pageNum,
+          created_at: now,
+          comments: trimmedComment
+            ? [
+                {
+                  id: `optimistic-${now}`,
+                  body: trimmedComment,
+                  created_at: now,
+                },
+              ]
+            : [],
+        },
       });
 
       const result = await addPassage(shelfItemId, {

@@ -13,6 +13,11 @@ export type PassageWithComments = {
   comments: { id: string; body: string; created_at: string }[];
 };
 
+export type OptimisticAction =
+  | { type: "add"; passage: PassageWithComments }
+  | { type: "update"; id: string; body: string; page: number | null }
+  | { type: "delete"; id: string };
+
 // 서버 조회와 같은 정렬(쪽수 오름차순·null은 뒤, 같으면 생성순)로 낙관적 항목을 제자리에 꽂습니다.
 function byReadingOrder(
   a: PassageWithComments,
@@ -24,6 +29,26 @@ function byReadingOrder(
     return a.page - b.page;
   }
   return a.created_at.localeCompare(b.created_at);
+}
+
+function reduce(
+  state: PassageWithComments[],
+  action: OptimisticAction,
+): PassageWithComments[] {
+  switch (action.type) {
+    case "add":
+      return [...state, action.passage].sort(byReadingOrder);
+    case "update":
+      return state
+        .map((p) =>
+          p.id === action.id
+            ? { ...p, body: action.body, page: action.page }
+            : p,
+        )
+        .sort(byReadingOrder);
+    case "delete":
+      return state.filter((p) => p.id !== action.id);
+  }
 }
 
 /**
@@ -38,10 +63,7 @@ export default function PassageList({
   shelfItemId: string;
   passages: PassageWithComments[];
 }) {
-  const [optimistic, addOptimistic] = useOptimistic(
-    passages,
-    (state, next: PassageWithComments) => [...state, next].sort(byReadingOrder),
-  );
+  const [optimistic, applyOptimistic] = useOptimistic(passages, reduce);
 
   return (
     <>
@@ -61,6 +83,7 @@ export default function PassageList({
               id={passage.id}
               body={passage.body}
               page={passage.page}
+              applyOptimistic={applyOptimistic}
             >
               <PassageCard
                 id={passage.id}
@@ -74,7 +97,7 @@ export default function PassageList({
         </div>
       )}
 
-      <AddPassage shelfItemId={shelfItemId} addOptimistic={addOptimistic} />
+      <AddPassage shelfItemId={shelfItemId} applyOptimistic={applyOptimistic} />
     </>
   );
 }
