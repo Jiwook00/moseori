@@ -53,7 +53,7 @@ export default function PassageCard({
   return (
     <>
       <p
-        className={`font-serif leading-[1.75] text-ink ${
+        className={`font-serif leading-[1.75] text-ink whitespace-pre-wrap ${
           today ? "text-[16px]" : "text-[15px]"
         }`}
       >
@@ -74,7 +74,7 @@ export default function PassageCard({
         <div className="mt-[24px] flex flex-col gap-4">
           {comments.map((comment) => (
             <div key={comment.id}>
-              <p className="text-[13px] leading-[1.6] text-ink">
+              <p className="text-[13px] leading-[1.6] text-ink whitespace-pre-wrap">
                 {comment.body}
               </p>
               <p className="text-sub mt-1 text-[11px]">
