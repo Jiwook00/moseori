@@ -1,22 +1,31 @@
 "use client";
 
 import { useOptimistic } from "react";
-import PassageCard from "@/app/passage-card";
 import AddPassage from "./add-passage";
 import PassageItem from "./passage-item";
+
+export type Comment = { id: string; body: string; created_at: string };
 
 export type PassageWithComments = {
   id: string;
   body: string;
   page: number | null;
   created_at: string;
-  comments: { id: string; body: string; created_at: string }[];
+  comments: Comment[];
 };
 
 export type OptimisticAction =
   | { type: "add"; passage: PassageWithComments }
   | { type: "update"; id: string; body: string; page: number | null }
-  | { type: "delete"; id: string };
+  | { type: "delete"; id: string }
+  | { type: "addComment"; passageId: string; comment: Comment }
+  | {
+      type: "updateComment";
+      passageId: string;
+      commentId: string;
+      body: string;
+    }
+  | { type: "deleteComment"; passageId: string; commentId: string };
 
 // 서버 조회와 같은 정렬(쪽수 오름차순·null은 뒤, 같으면 생성순)로 낙관적 항목을 제자리에 꽂습니다.
 function byReadingOrder(
@@ -48,6 +57,32 @@ function reduce(
         .sort(byReadingOrder);
     case "delete":
       return state.filter((p) => p.id !== action.id);
+    case "addComment":
+      return state.map((p) =>
+        p.id === action.passageId
+          ? { ...p, comments: [...p.comments, action.comment] }
+          : p,
+      );
+    case "updateComment":
+      return state.map((p) =>
+        p.id === action.passageId
+          ? {
+              ...p,
+              comments: p.comments.map((c) =>
+                c.id === action.commentId ? { ...c, body: action.body } : c,
+              ),
+            }
+          : p,
+      );
+    case "deleteComment":
+      return state.map((p) =>
+        p.id === action.passageId
+          ? {
+              ...p,
+              comments: p.comments.filter((c) => c.id !== action.commentId),
+            }
+          : p,
+      );
   }
 }
 
@@ -80,19 +115,9 @@ export default function PassageList({
           {optimistic.map((passage) => (
             <PassageItem
               key={passage.id}
-              id={passage.id}
-              body={passage.body}
-              page={passage.page}
+              passage={passage}
               applyOptimistic={applyOptimistic}
-            >
-              <PassageCard
-                id={passage.id}
-                body={passage.body}
-                page={passage.page}
-                comments={passage.comments}
-                draw={false}
-              />
-            </PassageItem>
+            />
           ))}
         </div>
       )}

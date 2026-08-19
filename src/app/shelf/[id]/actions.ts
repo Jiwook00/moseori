@@ -346,3 +346,100 @@ export async function addPassage(
   revalidatePath(`/shelf/${shelfItemId}`);
   return { ok: true };
 }
+
+const COMMENT_NOT_FOUND = {
+  ok: false,
+  error: "생각을 찾지 못했습니다",
+} as const;
+
+/**
+ * 살아있는 내 코멘트 하나와 그것이 달린 밑줄의 shelf_item_id.
+ * revalidate 대상을 알아야 해서 passage를 임베드해 함께 가져옵니다.
+ */
+async function loadComment(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  commentId: string,
+) {
+  return supabase
+    .from("passage_comment")
+    .select("id, passage:passage(shelf_item_id)")
+    .eq("id", commentId)
+    .is("deleted_at", null)
+    .maybeSingle<{ id: string; passage: { shelf_item_id: string } | null }>();
+}
+
+/** 기존 밑줄에 생각을 덧붙입니다 (§4 — 한 문장에 여러 개, 시간순). */
+export async function addComment(
+  passageId: string,
+  body: string,
+): Promise<MutationResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return UNAUTH;
+
+  const { data: passage } = await loadPassage(supabase, passageId);
+  if (!passage) return PASSAGE_NOT_FOUND;
+
+  const text = body.trim();
+  if (!text) return { ok: false, error: "생각을 입력해주세요" };
+
+  const { error } = await supabase
+    .from("passage_comment")
+    .insert({ passage_id: passageId, user_id: user.id, body: text });
+  if (error) return { ok: false, error: "생각을 남기지 못했습니다" };
+
+  revalidatePath(`/shelf/${passage.shelf_item_id}`);
+  return { ok: true };
+}
+
+/** 생각 수정. body만 고칩니다 (passage_comment에는 updated_at이 없습니다 — §4). */
+export async function updateComment(
+  commentId: string,
+  body: string,
+): Promise<MutationResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return UNAUTH;
+
+  const { data: comment } = await loadComment(supabase, commentId);
+  if (!comment?.passage) return COMMENT_NOT_FOUND;
+
+  const text = body.trim();
+  if (!text) return { ok: false, error: "생각을 입력해주세요" };
+
+  const { error } = await supabase
+    .from("passage_comment")
+    .update({ body: text })
+    .eq("id", commentId);
+  if (error) return { ok: false, error: "생각을 고치지 못했습니다" };
+
+  revalidatePath(`/shelf/${comment.passage.shelf_item_id}`);
+  return { ok: true };
+}
+
+/** 생각 삭제. soft delete입니다. */
+export async function deleteComment(
+  commentId: string,
+): Promise<MutationResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return UNAUTH;
+
+  const { data: comment } = await loadComment(supabase, commentId);
+  if (!comment?.passage) return COMMENT_NOT_FOUND;
+
+  const { error } = await supabase
+    .from("passage_comment")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", commentId);
+  if (error) return { ok: false, error: "생각을 지우지 못했습니다" };
+
+  revalidatePath(`/shelf/${comment.passage.shelf_item_id}`);
+  return { ok: true };
+}
