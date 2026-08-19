@@ -111,7 +111,7 @@ export default function PassageItem({
   }
 
   return (
-    <div>
+    <div className="group">
       {editing ? (
         <form onSubmit={submit}>
           <GrowTextarea
@@ -125,7 +125,7 @@ export default function PassageItem({
           {/* 읽기와 같은 자리의 손그림 선. 같은 시드라 같은 파형입니다. */}
           <ScribbleLine seed={id} className="mt-[7px] block" />
 
-          {/* 문장 컨트롤이 footer 자리(쪽수 선상)를 차지합니다. 고침은 문장이 바뀌었을 때만. */}
+          {/* 쪽수·취소·고침만 한 줄. 고침은 문장이 바뀌었을 때만. */}
           <div className="mt-[18px] flex items-center gap-3">
             <input
               value={page}
@@ -138,9 +138,27 @@ export default function PassageItem({
               className="border-line bg-card placeholder:text-sub/70 w-16 border px-2 py-1 text-xs outline-none"
             />
             {error && <span className="text-sub text-xs">{error}</span>}
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="text-sub hover:text-ink ml-auto text-xs"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              disabled={!body.trim() || !dirty || pending}
+              className="border-line border px-4 py-1.5 text-xs disabled:opacity-40"
+            >
+              {pending ? "고치는 중" : "고침"}
+            </button>
+          </div>
+
+          {/* 파괴적 동작은 편집 줄에서 갈라 아래에 옅게 둡니다. */}
+          <div className="mt-3 text-xs">
             {confirming ? (
-              <span className="flex items-center gap-3 text-xs">
-                <span className="text-sub">지울까요?</span>
+              <span className="flex items-center gap-3">
+                <span className="text-sub">이 밑줄을 지울까요?</span>
                 <button
                   type="button"
                   onClick={remove}
@@ -161,25 +179,11 @@ export default function PassageItem({
               <button
                 type="button"
                 onClick={() => setConfirming(true)}
-                className="text-sub hover:text-ink text-xs"
+                className="text-sub/70 hover:text-ink"
               >
-                제거
+                이 밑줄 지우기
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => setEditing(false)}
-              className="text-sub hover:text-ink ml-auto text-xs"
-            >
-              취소
-            </button>
-            <button
-              type="submit"
-              disabled={!body.trim() || !dirty || pending}
-              className="border-line border px-4 py-1.5 text-xs disabled:opacity-40"
-            >
-              {pending ? "고치는 중" : "고침"}
-            </button>
           </div>
         </form>
       ) : (
@@ -198,28 +202,13 @@ export default function PassageItem({
 
           <ScribbleLine seed={id} className="mt-[7px] block" />
 
-          {/* +생각을 손그림 선 바로 아래·쪽수와 같은 선상 왼편에 둡니다(§완충 B). */}
-          <div className="mt-[18px] flex items-baseline justify-between gap-4">
-            {adding ? (
-              <span />
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setError(null);
-                  setAdding(true);
-                }}
-                className="text-sub hover:text-ink text-xs"
-              >
-                {comments.length > 0 ? "+생각" : "+생각 남기기"}
-              </button>
-            )}
-            {passage.page != null && (
+          {passage.page != null && (
+            <div className="mt-[18px] flex items-baseline justify-end">
               <span className="text-sub shrink-0 text-xs">
                 {passage.page}쪽
               </span>
-            )}
-          </div>
+            </div>
+          )}
         </>
       )}
 
@@ -270,6 +259,20 @@ export default function PassageItem({
             </button>
           </div>
         </div>
+      )}
+
+      {/* 생각 남기기 — 생각들 맨 아래(시간순 자리). 평소엔 옅다가 카드에 손을 얹으면 진해집니다. */}
+      {!adding && !editing && (
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setAdding(true);
+          }}
+          className="text-sub/55 group-hover:text-sub hover:!text-ink mt-4 text-xs transition-colors"
+        >
+          생각 남기기
+        </button>
       )}
 
       {error && !editing && !adding && (
