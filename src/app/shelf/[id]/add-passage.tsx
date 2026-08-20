@@ -76,7 +76,7 @@ export default function AddPassage({
 
   return (
     <form onSubmit={submit} className="mt-10">
-      {/* 종이 면으로 accent 필드 위에 띄운다 — '쓰는 곳'을 '쌓인 곳'과 색으로 가른다. */}
+      {/* 종이 박스에 테두리를 둘러 '쓰는 곳'을 종이 바탕·색 카드와 가른다. */}
       <div className="bg-card border-line border p-5 sm:p-6">
         <GrowTextarea
           value={body}

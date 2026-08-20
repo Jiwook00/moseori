@@ -90,63 +90,62 @@ export default async function BookDetailPage({
 
   return (
     <main className="flex w-full flex-1 flex-col">
-      <div className="px-5 pt-8 sm:px-7">
-        <Link
-          href="/shelf"
-          className="text-sub hover:text-ink inline-flex w-fit items-center gap-1 text-xs"
-        >
-          <span aria-hidden>←</span> 책장
-        </Link>
-      </div>
-
-      {/* 펼침 2단: 왼쪽(책·리뷰, 종이·sticky) / 오른쪽(밑줄, accent 필드). 좁으면 접혀 쌓입니다. */}
-      <div className="mt-4 flex-1 lg:grid lg:grid-cols-[4fr_6fr] lg:items-start">
+      {/* 펼침 2단: 왼쪽(책·리뷰, 종이·sticky) / 오른쪽(밑줄 카드). 좁으면 접혀 쌓입니다.
+          맨 윗줄에서 왼쪽 '책장' 링크와 오른쪽 '밑줄' 라벨이 같은 선에서 시작하고,
+          그 아래 표지 top과 첫 카드 top이 같은 gap(24px)으로 맞습니다. */}
+      <div className="flex-1 pt-8 lg:grid lg:grid-cols-[4fr_6fr] lg:items-start">
         <div className="px-5 pb-10 sm:px-7 lg:sticky lg:top-6 lg:self-start lg:pr-9 lg:pb-16">
-          {book.cover_path && book.cover_width && book.cover_height && (
-            <Image
-              src={coverPublicUrl(book.cover_path)}
-              alt=""
-              width={book.cover_width}
-              height={book.cover_height}
-              style={{ width: COVER_W }}
-              className="h-auto"
-            />
-          )}
-          <h1 className="mt-5 text-[19px] leading-snug">{book.title}</h1>
-          {book.author && (
-            <p className="text-sub mt-2 text-sm">{book.author}</p>
-          )}
-          {facts.length > 0 && (
-            <p className="text-sub mt-3 text-xs">{facts.join(" · ")}</p>
-          )}
+          <Link
+            href="/shelf"
+            className="text-sub hover:text-ink inline-flex w-fit items-center gap-1 text-xs"
+          >
+            <span aria-hidden>←</span> 책장
+          </Link>
           <div className="mt-6">
-            <StatusRating
+            {book.cover_path && book.cover_width && book.cover_height && (
+              <Image
+                src={coverPublicUrl(book.cover_path)}
+                alt=""
+                width={book.cover_width}
+                height={book.cover_height}
+                style={{ width: COVER_W }}
+                className="h-auto"
+              />
+            )}
+            <h1 className="mt-5 text-[19px] leading-snug">{book.title}</h1>
+            {book.author && (
+              <p className="text-sub mt-2 text-sm">{book.author}</p>
+            )}
+            {facts.length > 0 && (
+              <p className="text-sub mt-3 text-xs">{facts.join(" · ")}</p>
+            )}
+            <div className="mt-6">
+              <StatusRating
+                shelfItemId={data.id}
+                initialStatus={data.status}
+                initialRating={data.rating}
+              />
+              <ReadingPeriod
+                key={`${data.started_at}-${data.finished_at}`}
+                shelfItemId={data.id}
+                initialStarted={data.started_at}
+                initialFinished={data.finished_at}
+              />
+            </div>
+
+            <ReviewEditor
               shelfItemId={data.id}
-              initialStatus={data.status}
-              initialRating={data.rating}
-            />
-            <ReadingPeriod
-              key={`${data.started_at}-${data.finished_at}`}
-              shelfItemId={data.id}
-              initialStarted={data.started_at}
-              initialFinished={data.finished_at}
+              initialBody={review?.body ?? ""}
             />
           </div>
-
-          <ReviewEditor
-            shelfItemId={data.id}
-            initialBody={review?.body ?? ""}
-          />
         </div>
 
-        {/* accent 필드: 색이 화면 오른쪽 끝까지 흐르고, 글줄만 읽기 폭으로 좁힙니다. */}
-        <div
-          className="px-5 pt-10 pb-14 sm:px-7 lg:pt-10 lg:pl-9"
-          style={{ background: book.accent_color ?? "var(--color-card)" }}
-        >
+        {/* 밑줄은 종이 바탕 위에 accent 색 카드로 쌓입니다 (밑줄 목록과 같은 형식). */}
+        <div className="px-5 pt-10 pb-14 sm:px-7 lg:pt-0 lg:pl-9">
           <div className="max-w-[680px]">
             <PassageList
               shelfItemId={data.id}
+              accentColor={book.accent_color}
               passages={passagesWithComments}
             />
           </div>

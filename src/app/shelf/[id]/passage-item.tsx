@@ -22,9 +22,11 @@ import type {
  */
 export default function PassageItem({
   passage,
+  accentColor,
   applyOptimistic,
 }: {
   passage: PassageWithComments;
+  accentColor: string | null;
   applyOptimistic: (action: OptimisticAction) => void;
 }) {
   const { id, comments } = passage;
@@ -111,7 +113,10 @@ export default function PassageItem({
   }
 
   return (
-    <div className="group">
+    <div
+      className="group px-[20px] pt-[22px] pb-[16px]"
+      style={{ background: accentColor ?? "var(--color-card)" }}
+    >
       {editing ? (
         <form onSubmit={submit}>
           <GrowTextarea

@@ -72,7 +72,8 @@ export default function ReviewEditor({
 
   return (
     <section className="border-line mt-10 border-t pt-8">
-      <p className="text-sub text-[10.5px] tracking-[0.09em]">리뷰</p>
+      {/* 상세의 '밑줄' 라벨과 짝을 맞춰 12px(text-xs). 다른 섹션 라벨은 10.5px 규격 유지. */}
+      <p className="text-sub text-xs">리뷰</p>
 
       {editing ? (
         <>

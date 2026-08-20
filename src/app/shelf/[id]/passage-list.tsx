@@ -93,16 +93,19 @@ function reduce(
  */
 export default function PassageList({
   shelfItemId,
+  accentColor,
   passages,
 }: {
   shelfItemId: string;
+  accentColor: string | null;
   passages: PassageWithComments[];
 }) {
   const [optimistic, applyOptimistic] = useOptimistic(passages, reduce);
 
   return (
     <>
-      <p className="text-sub text-[10.5px] tracking-[0.09em]">
+      {/* 상세 맨 윗줄에서 왼쪽 '책장' 링크와 짝지어 같은 크기(text-xs)로 둡니다. */}
+      <p className="text-sub text-xs">
         밑줄{optimistic.length > 0 ? ` ${optimistic.length}` : ""}
       </p>
 
@@ -111,11 +114,12 @@ export default function PassageList({
           아직 밑줄이 없습니다. 좋았던 문장을 그어보세요.
         </p>
       ) : (
-        <div className="mt-6 flex flex-col gap-8">
+        <div className="mt-6 flex flex-col gap-7">
           {optimistic.map((passage) => (
             <PassageItem
               key={passage.id}
               passage={passage}
+              accentColor={accentColor}
               applyOptimistic={applyOptimistic}
             />
           ))}
