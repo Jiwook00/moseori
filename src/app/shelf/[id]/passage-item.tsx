@@ -51,8 +51,8 @@ export default function PassageItem({
     setEditing(true);
   }
 
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
+  function submit(event?: React.FormEvent) {
+    event?.preventDefault();
     if (pending || !body.trim()) return;
     setError(null);
 
@@ -122,6 +122,7 @@ export default function PassageItem({
           <GrowTextarea
             value={body}
             onChange={(event) => setBody(event.target.value)}
+            onModEnter={() => submit()}
             aria-label="문장"
             autoFocus
             className="placeholder:text-sub/70 text-ink min-h-[44px] w-full bg-transparent font-serif text-[15px] leading-[1.75] outline-none"
@@ -237,6 +238,7 @@ export default function PassageItem({
           <GrowTextarea
             value={thought}
             onChange={(event) => setThought(event.target.value)}
+            onModEnter={saveThought}
             placeholder="이 문장에 생각 남기기"
             autoFocus
             className="placeholder:text-sub/70 text-ink min-h-[44px] w-full bg-transparent text-[13px] leading-[1.6] outline-none"

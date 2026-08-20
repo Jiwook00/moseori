@@ -77,6 +77,7 @@ export default function CommentItem({
         <GrowTextarea
           value={value}
           onChange={(event) => setValue(event.target.value)}
+          onModEnter={submit}
           aria-label="생각"
           autoFocus
           className="placeholder:text-sub/70 text-ink min-h-[40px] w-full bg-transparent text-[13px] leading-[1.6] outline-none"

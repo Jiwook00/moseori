@@ -23,8 +23,8 @@ export default function AddPassage({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
+  function submit(event?: React.FormEvent) {
+    event?.preventDefault();
     if (pending || !body.trim()) return;
     setError(null);
 
@@ -81,6 +81,7 @@ export default function AddPassage({
         <GrowTextarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
+          onModEnter={() => submit()}
           placeholder="좋았던 문장"
           className="placeholder:text-sub/70 text-ink min-h-[56px] w-full bg-transparent font-serif text-[15px] leading-[1.75] outline-none"
         />
@@ -119,6 +120,7 @@ export default function AddPassage({
           <GrowTextarea
             value={comment}
             onChange={(event) => setComment(event.target.value)}
+            onModEnter={() => submit()}
             placeholder="이 문장에 대한 생각 (선택)"
             autoFocus
             className="placeholder:text-sub/70 text-ink mt-[24px] min-h-[44px] w-full bg-transparent text-[13px] leading-[1.6] outline-none"

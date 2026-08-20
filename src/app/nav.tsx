@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ScribbleLine from "./scribble-line";
 import SearchOverlay from "./search/search-overlay";
 
@@ -20,6 +20,18 @@ export default function Nav() {
   const pathname = usePathname();
   // 검색 오버레이는 네비가 듭니다. URL을 건드리지 않아 어디서 열든 원래 자리로 돌아옵니다 (§5).
   const [searching, setSearching] = useState(false);
+
+  // ⌘K / Ctrl+K로 어디서나 검색을 엽니다. 오버레이가 ESC 닫기를 맡습니다.
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setSearching(true);
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   return (
     <header className="border-line border-b">

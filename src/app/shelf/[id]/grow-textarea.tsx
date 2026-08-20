@@ -10,8 +10,12 @@ export default function GrowTextarea({
   value,
   className,
   autoFocus,
+  onModEnter,
+  onKeyDown,
   ...props
-}: React.ComponentPropsWithoutRef<"textarea">) {
+}: React.ComponentPropsWithoutRef<"textarea"> & {
+  onModEnter?: () => void;
+}) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
   useLayoutEffect(() => {
@@ -39,6 +43,18 @@ export default function GrowTextarea({
       ref={ref}
       value={value}
       rows={1}
+      onKeyDown={(event) => {
+        // ⌘↵ / Ctrl+↵으로 저장. 줄바꿈은 그냥 Enter에 남깁니다.
+        if (
+          onModEnter &&
+          event.key === "Enter" &&
+          (event.metaKey || event.ctrlKey)
+        ) {
+          event.preventDefault();
+          onModEnter();
+        }
+        onKeyDown?.(event);
+      }}
       className={`resize-none overflow-hidden ${className ?? ""}`}
       {...props}
     />

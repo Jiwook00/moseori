@@ -80,6 +80,7 @@ export default function ReviewEditor({
           <GrowTextarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
+            onModEnter={save}
             placeholder="이 책에 대해 남기고 싶은 말"
             autoFocus
             className="placeholder:text-sub/70 text-ink mt-4 min-h-[112px] w-full bg-transparent text-[15px] leading-[1.7] outline-none"
