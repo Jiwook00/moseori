@@ -1,22 +1,37 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import {
+  forwardRef,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+} from "react";
 
 /**
  * 내용에 따라 높이가 저절로 늘어나는 textarea. 최소 높이는 `className`의 `min-h-*`가 정합니다.
  * `autoFocus`를 주면 커서를 글 끝에 둡니다 — 고치러 들어올 때 이어 쓰는 자리로 바로 가도록.
+ * ref는 안쪽 textarea를 그대로 넘겨줍니다 (쪽수 칸에서 ↑로 문장 끝에 돌아오기 등).
  */
-export default function GrowTextarea({
-  value,
-  className,
-  autoFocus,
-  onModEnter,
-  onKeyDown,
-  ...props
-}: React.ComponentPropsWithoutRef<"textarea"> & {
-  onModEnter?: () => void;
-}) {
+const GrowTextarea = forwardRef<
+  HTMLTextAreaElement,
+  React.ComponentPropsWithoutRef<"textarea"> & {
+    onModEnter?: () => void;
+    onArrowDownAtLastLine?: () => void;
+  }
+>(function GrowTextarea(
+  {
+    value,
+    className,
+    autoFocus,
+    onModEnter,
+    onArrowDownAtLastLine,
+    onKeyDown,
+    ...props
+  },
+  forwardedRef,
+) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  useImperativeHandle(forwardedRef, () => ref.current!, []);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -53,10 +68,78 @@ export default function GrowTextarea({
           event.preventDefault();
           onModEnter();
         }
+        // 시각적 마지막 줄에서 ↓ → 다음 칸(쪽수)으로. 위 줄에서는 원래대로 줄 이동.
+        if (
+          onArrowDownAtLastLine &&
+          event.key === "ArrowDown" &&
+          caretOnLastVisualLine(event.currentTarget)
+        ) {
+          event.preventDefault();
+          onArrowDownAtLastLine();
+        }
         onKeyDown?.(event);
       }}
       className={`resize-none overflow-hidden ${className ?? ""}`}
       {...props}
     />
   );
+});
+
+export default GrowTextarea;
+
+/**
+ * 커서가 시각적으로 마지막 줄에 있는지. textarea는 커서 좌표 API가 없어, 같은 폭·활자로
+ * 접힘까지 재현한 숨은 div에 커서 위치와 글 끝을 각각 표시해 세로 위치를 비교합니다.
+ * 자동 줄바꿈된 긴 한 문장도 "보이는 마지막 줄"을 기준으로 판정합니다.
+ */
+function caretOnLastVisualLine(el: HTMLTextAreaElement): boolean {
+  const { selectionStart, selectionEnd, value } = el;
+  if (selectionStart !== selectionEnd) return false;
+
+  const cs = getComputedStyle(el);
+  const mirror = document.createElement("div");
+  const s = mirror.style;
+  for (const prop of MIRROR_STYLE_PROPS) {
+    s.setProperty(prop, cs.getPropertyValue(prop));
+  }
+  s.position = "absolute";
+  s.top = "0";
+  s.left = "-9999px";
+  s.visibility = "hidden";
+  s.height = "auto";
+  s.whiteSpace = "pre-wrap";
+  s.overflowWrap = "break-word";
+  // 접힘 폭 = 안쪽 콘텐츠 폭. clientWidth(테두리·스크롤바 제외)에 padding을 포함시킵니다.
+  s.boxSizing = "border-box";
+  s.width = `${el.clientWidth}px`;
+
+  const caret = document.createElement("span");
+  const end = document.createElement("span");
+  mirror.appendChild(document.createTextNode(value.slice(0, selectionStart)));
+  mirror.appendChild(caret);
+  mirror.appendChild(document.createTextNode(value.slice(selectionStart)));
+  mirror.appendChild(end);
+
+  document.body.appendChild(mirror);
+  const onLast = caret.offsetTop === end.offsetTop;
+  document.body.removeChild(mirror);
+  return onLast;
 }
+
+const MIRROR_STYLE_PROPS = [
+  "padding-top",
+  "padding-right",
+  "padding-bottom",
+  "padding-left",
+  "font-family",
+  "font-size",
+  "font-weight",
+  "font-style",
+  "font-variant",
+  "letter-spacing",
+  "line-height",
+  "text-transform",
+  "text-indent",
+  "word-spacing",
+  "tab-size",
+];

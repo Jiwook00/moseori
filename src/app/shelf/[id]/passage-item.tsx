@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import ScribbleLine from "@/app/scribble-line";
 import { addComment, deletePassage, updatePassage } from "./actions";
 import CommentItem from "./comment-item";
@@ -40,6 +40,18 @@ export default function PassageItem({
   const [thought, setThought] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // 문장칸 ↕ 쪽수칸을 방향키로 오갑니다 (밑줄 남기기와 같은 결).
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const pageRef = useRef<HTMLInputElement>(null);
+
+  function focusBodyEnd() {
+    const el = bodyRef.current;
+    if (!el) return;
+    el.focus();
+    const end = el.value.length;
+    el.setSelectionRange(end, end);
+  }
 
   const dirty = body.trim() !== passage.body || page !== initialPageStr;
 
@@ -120,9 +132,11 @@ export default function PassageItem({
       {editing ? (
         <form onSubmit={submit}>
           <GrowTextarea
+            ref={bodyRef}
             value={body}
             onChange={(event) => setBody(event.target.value)}
             onModEnter={() => submit()}
+            onArrowDownAtLastLine={() => pageRef.current?.focus()}
             aria-label="문장"
             autoFocus
             className="placeholder:text-sub/70 text-ink min-h-[44px] w-full bg-transparent font-serif text-[15px] leading-[1.75] outline-none"
@@ -134,10 +148,24 @@ export default function PassageItem({
           {/* 쪽수·취소·고침만 한 줄. 고침은 문장이 바뀌었을 때만. */}
           <div className="mt-[18px] flex items-center gap-3">
             <input
+              ref={pageRef}
               value={page}
               onChange={(event) =>
                 setPage(event.target.value.replace(/[^\d]/g, ""))
               }
+              onKeyDown={(event) => {
+                if (event.key === "ArrowUp") {
+                  event.preventDefault();
+                  focusBodyEnd();
+                } else if (event.key === "Enter") {
+                  // 고침 버튼이 dirty 아닐 때 disabled라 폼 암묵 제출이 막힙니다.
+                  // 바꾼 게 없어도 Enter로 편집을 닫습니다.
+                  event.preventDefault();
+                  if (!body.trim()) return;
+                  if (dirty) submit();
+                  else setEditing(false);
+                }
+              }}
               inputMode="numeric"
               placeholder="쪽"
               aria-label="쪽수 (선택)"

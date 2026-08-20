@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { addPassage } from "./actions";
 import GrowTextarea from "./grow-textarea";
 import type { OptimisticAction } from "./passage-list";
@@ -22,6 +22,18 @@ export default function AddPassage({
   const [showComment, setShowComment] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // 문장칸 ↕ 쪽수칸을 방향키로 오갑니다. 문장 마지막 줄에서 ↓, 쪽수칸에서 ↑.
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const pageRef = useRef<HTMLInputElement>(null);
+
+  function focusBodyEnd() {
+    const el = bodyRef.current;
+    if (!el) return;
+    el.focus();
+    const end = el.value.length;
+    el.setSelectionRange(end, end);
+  }
 
   function submit(event?: React.FormEvent) {
     event?.preventDefault();
@@ -79,19 +91,28 @@ export default function AddPassage({
       {/* 종이 박스에 테두리를 둘러 '쓰는 곳'을 종이 바탕·색 카드와 가른다. */}
       <div className="bg-card border-line border p-5 sm:p-6">
         <GrowTextarea
+          ref={bodyRef}
           value={body}
           onChange={(event) => setBody(event.target.value)}
           onModEnter={() => submit()}
+          onArrowDownAtLastLine={() => pageRef.current?.focus()}
           placeholder="좋았던 문장"
           className="placeholder:text-sub/70 text-ink min-h-[56px] w-full bg-transparent font-serif text-[15px] leading-[1.75] outline-none"
         />
 
         <div className="mt-[18px] flex items-center gap-3">
           <input
+            ref={pageRef}
             value={page}
             onChange={(event) =>
               setPage(event.target.value.replace(/[^\d]/g, ""))
             }
+            onKeyDown={(event) => {
+              if (event.key === "ArrowUp") {
+                event.preventDefault();
+                focusBodyEnd();
+              }
+            }}
             inputMode="numeric"
             placeholder="쪽"
             aria-label="쪽수 (선택)"
