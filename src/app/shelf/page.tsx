@@ -5,7 +5,7 @@ import {
   isShelfStatus,
 } from "@/lib/shelf/status";
 import { createClient } from "@/lib/supabase/server";
-import EmptyShelf from "./empty-shelf";
+import SearchScreen from "@/app/search/search-screen";
 import ShelfGrid, { type ShelfBook } from "./shelf-grid";
 import StatusTabs from "./status-tabs";
 
@@ -71,7 +71,7 @@ export default async function ShelfPage({
     <main className="w-full flex-1 px-5 py-14 sm:px-7">
       {empty ? (
         <div className="mx-auto max-w-[720px]">
-          <EmptyShelf />
+          <SearchScreen first />
         </div>
       ) : (
         <>

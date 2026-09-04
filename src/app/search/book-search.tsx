@@ -7,25 +7,19 @@ import type { SearchResult } from "@/app/api/search/route";
 import { STATUSES } from "@/lib/shelf/status";
 
 /**
- * 책 검색과 담기 (기획서 §5 · §7). 검색 오버레이와 빈 책장이 이 컴포넌트를 함께 쓰고,
- * `variant`로 껍데기만 다릅니다. 담으면 목록이 아니라 그 책 상세로 갑니다.
+ * 책 검색과 담기 (기획서 §5 · §7). 담으면 목록이 아니라 그 책 상세로 갑니다.
  */
 
 /** 담을 때 고를 상태. `덮어둠`은 뺍니다 (읽다 멈춘 책의 상태라 담을 때 고를 일이 없음). */
 const ADD_STATUSES = STATUSES.filter(({ value }) => value !== "set_aside");
 
 export default function BookSearch({
-  variant = "inline",
   autoFocus = false,
   onDone,
-  onClose,
 }: {
-  /** `inline`은 흐름 안에(빈 책장), `overlay`는 입력창을 위에 고정한 덮개 틀. */
-  variant?: "inline" | "overlay";
   autoFocus?: boolean;
-  /** 담기 직전에 부릅니다. 오버레이가 자기를 닫는 자리. */
+  /** 담기 직전에 부릅니다. 덮개가 자기를 닫는 자리. */
   onDone?: () => void;
-  onClose?: () => void;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -181,33 +175,7 @@ export default function BookSearch({
     </>
   );
 
-  if (variant === "overlay") {
-    return (
-      <div className="flex h-full flex-col">
-        {/* 네비와 같은 높이·같은 컨테이너. 덮개가 열려도 틀이 흔들리지 않습니다. */}
-        <div className="border-line shrink-0 border-b">
-          <div className="mx-auto flex h-13 w-full max-w-[720px] items-center px-5 sm:px-7">
-            {form}
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-sub hover:text-ink shrink-0 pl-5 text-[13px]"
-            >
-              닫기
-            </button>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto overscroll-contain">
-          <div className="mx-auto w-full max-w-[720px] px-5 pb-24 sm:px-7">
-            {body}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 흐름 안(빈 책장)에서는 입력창 아래를 손으로 그은 선으로 받칩니다.
+  // 입력창 아래를 손으로 그은 선으로 받칩니다.
   return (
     <>
       <div className="flex items-center">{form}</div>

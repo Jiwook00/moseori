@@ -61,27 +61,14 @@ export default function Nav() {
           );
         })}
 
-        {/* 검색은 화면이 아니라 어디서나 열리는 오버레이입니다 (§5). */}
+        {/* 검색은 URL을 갖지 않고 덮개로 열리지만, 자리는 책장·밑줄과 나란합니다 (§5). */}
         <button
           type="button"
           onClick={() => setSearching(true)}
-          aria-label="책 검색"
           aria-haspopup="dialog"
-          className="text-sub hover:text-ink ml-auto"
+          className="text-sub hover:text-ink flex h-full cursor-pointer items-center text-sm font-medium"
         >
-          <svg
-            width={16}
-            height={16}
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.7}
-            strokeLinecap="round"
-            aria-hidden
-          >
-            <circle cx={6.8} cy={6.8} r={4.6} />
-            <path d="M10.4 10.4 L14 14" />
-          </svg>
+          찾기
         </button>
       </nav>
 
