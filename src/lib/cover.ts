@@ -9,20 +9,24 @@ import sharp from "sharp";
 const MIN_COVER_BYTES = 3000;
 
 /**
- * 큰 표지로 인정하는 최소 너비. `/cover500/`이 200을 준다고 큰 이미지는 아닙니다 —
- * 오래된 책에는 이 경로에 원본보다 작은 파일이 놓여 있어(바이트로는 못 거름) 실제 픽셀을 봐야 합니다.
+ * 큰 표지로 인정하는 최소 너비. 원본이 200을 준다고 큰 이미지는 아닙니다 —
+ * 원본이 썸네일보다 작은 책이 있을 수 있어(바이트로는 못 거름) 실제 픽셀을 봐야 합니다.
  */
 const LARGE_MIN_WIDTH = 300;
 
 const FETCH_TIMEOUT_MS = 7000;
 
 /**
- * 큰 표지 URL. 알라딘이 주는 `/cover200/` 조각을 `/cover500/`으로 바꿉니다
- * (§7의 옛 `/coverbig/`는 404). 안 되면 호출부가 조용히 200px를 씁니다.
+ * 카카오 썸네일(120×174 고정)의 `fname`에 든 원본 표지 주소. 원본은 폭 450px 안팎입니다.
+ * `http://`로 들어 있지만 https로도 같은 파일을 줍니다.
  */
-export function largeCoverUrl(url: string): string | null {
-  const replaced = url.replace(/\/cover[^/]*\//, "/cover500/");
-  return replaced === url ? null : replaced;
+export function largeCoverUrl(thumbnailUrl: string): string | null {
+  try {
+    const original = new URL(thumbnailUrl).searchParams.get("fname");
+    return original ? original.replace(/^http:/, "https:") : null;
+  } catch {
+    return null;
+  }
 }
 
 export type FetchedCover = {

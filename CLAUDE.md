@@ -1,7 +1,7 @@
 # 모서리 (moseori)
 
 읽은 책을 기록하고, 좋았던 문장에 밑줄을 긋는 웹.
-Next.js (App Router) + Supabase + 알라딘 TTB API.
+Next.js (App Router) + Supabase + 카카오 책 검색 API.
 
 ## 작업 전에 반드시 읽을 것
 
@@ -28,11 +28,11 @@ Next.js (App Router) + Supabase + 알라딘 TTB API.
 - `design.md` "하지 말 것" 목록을 어기지 않는다
 - 기획서에 없는 화면·필드·기능을 임의로 추가하지 않는다.
   필요해 보이면 만들지 말고 먼저 물어본다
-- 알라딘 API 키는 서버(Route Handler)에서만 쓴다. `NEXT_PUBLIC_` 접두사 금지
+- 카카오 API 키는 서버(Route Handler)에서만 쓴다. `NEXT_PUBLIC_` 접두사 금지
 - 모든 테이블에 RLS를 켠다. `book`을 제외한 전부는 `auth.uid() = user_id`
 - 모든 조회에 `deleted_at IS NULL`을 포함한다
-- 표지 원본은 `/cover500/`으로 500px까지 받는다 (기획서 §7).
-  실패하면 200px로 폴백하고 `cover_is_large`에 기록한다.
+- 표지는 카카오 썸네일의 `fname` 원본(폭 ~450px)을 먼저 받는다 (기획서 §7).
+  실패하면 썸네일로 폴백하고 `cover_is_large`에 기록한다.
   표시 크기는 `design.md`와 §5가 정한다 — 원본이 커졌다고 임의로 키우지 않는다
 - 강조색 `#C4573A`는 역할이 정해질 때까지 쓰지 않는다
 - UI 컴포넌트 라이브러리의 기본 스타일을 그대로 쓰지 않는다
@@ -99,7 +99,7 @@ docs/
 
 - 실행 `npm run dev` · 빌드 `npm run build` · 린트 `npm run lint`
 - 환경변수는 `.env.local` (`.env.local.example` 참조).
-  `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ALADIN_TTB_KEY`
+  `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `KAKAO_REST_API_KEY`
 - 루트의 `.env`는 Vite 시절 잔재(`VITE_*`)입니다. 쓰지 마세요
 
 ## 반복해서 지적된 것

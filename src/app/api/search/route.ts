@@ -1,15 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { AladinError, normalizeQuery, searchBooks } from "@/lib/aladin/client";
+import {
+  isbn13Of,
+  KakaoError,
+  normalizeQuery,
+  searchBooks,
+} from "@/lib/kakao/client";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * 책 검색 (기획서 §7). 알라딘 키가 서버 전용이라 브라우저는 이 경로로만 검색합니다.
+ * 책 검색 (기획서 §7). 카카오 키가 서버 전용이라 브라우저는 이 경로로만 검색합니다.
  * 결과마다 `shelfItemId`를 붙여 "이미 서재에 있어요"를 안내합니다 (§5).
  */
 
 export type SearchResult = {
-  aladinItemId: string;
-  isbn13: string | null;
+  isbn13: string;
   title: string;
   author: string | null;
   publisher: string | null;
@@ -38,45 +42,41 @@ export async function GET(request: NextRequest) {
   try {
     items = await searchBooks(query);
   } catch (error) {
-    if (error instanceof AladinError) {
+    if (error instanceof KakaoError) {
       console.error("[search]", error.message);
       return NextResponse.json(
-        { error: "알라딘 검색이 지금은 안 됩니다" },
+        { error: "책 검색이 지금은 안 됩니다" },
         { status: 502 },
       );
     }
     throw error;
   }
 
-  const aladinItemIds = items.map((item) => String(item.itemId));
+  const isbn13s = items.map((item) => isbn13Of(item)!);
 
   const { data: mine } = await supabase
     .from("shelf_item")
-    .select("id, book:book!inner(aladin_item_id)")
+    .select("id, book:book!inner(isbn13)")
     .eq("user_id", user.id)
-    .in("book.aladin_item_id", aladinItemIds);
+    .in("book.isbn13", isbn13s);
 
-  const shelfItemIdByAladinId = new Map<string, string>();
+  const shelfItemIdByIsbn = new Map<string, string>();
   for (const row of (mine ?? []) as unknown as {
     id: string;
-    book: { aladin_item_id: string } | null;
+    book: { isbn13: string } | null;
   }[]) {
-    if (row.book) shelfItemIdByAladinId.set(row.book.aladin_item_id, row.id);
+    if (row.book) shelfItemIdByIsbn.set(row.book.isbn13, row.id);
   }
 
-  const results: SearchResult[] = items.map((item) => {
-    const aladinItemId = String(item.itemId);
-    return {
-      aladinItemId,
-      isbn13: item.isbn13 ?? null,
-      title: item.title,
-      author: item.author ?? null,
-      publisher: item.publisher ?? null,
-      pubDate: item.pubDate ?? null,
-      cover: item.cover ?? null,
-      shelfItemId: shelfItemIdByAladinId.get(aladinItemId) ?? null,
-    };
-  });
+  const results: SearchResult[] = items.map((item, index) => ({
+    isbn13: isbn13s[index],
+    title: item.title,
+    author: item.authors.join(", ") || null,
+    publisher: item.publisher || null,
+    pubDate: item.datetime.slice(0, 10) || null,
+    cover: item.thumbnail || null,
+    shelfItemId: shelfItemIdByIsbn.get(isbn13s[index]) ?? null,
+  }));
 
   return NextResponse.json({ results });
 }
