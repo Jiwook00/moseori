@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { AladinError } from "@/lib/aladin/client";
+import { KakaoError } from "@/lib/kakao/client";
 import { ensureBook } from "@/lib/books/ensure-book";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * 책 담기 (기획서 §5 · §7). book이 없으면 알라딘에서 받아와 만들고(표지 복사 포함)
+ * 책 담기 (기획서 §5 · §7). book이 없으면 카카오에서 받아와 만들고(표지 복사 포함)
  * shelf_item을 만듭니다. 이미 서재에 있으면 상태를 덮지 않고 그대로 알려줍니다.
  */
 
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "로그인이 필요합니다" }, { status: 401 });
   }
 
-  let body: { aladinItemId?: unknown; status?: unknown };
+  let body: { isbn13?: unknown; status?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -35,11 +35,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const aladinItemId =
-    typeof body.aladinItemId === "string" ? body.aladinItemId.trim() : "";
-  if (!aladinItemId) {
+  const isbn13 = typeof body.isbn13 === "string" ? body.isbn13.trim() : "";
+  if (!/^\d{13}$/.test(isbn13)) {
     return NextResponse.json(
-      { error: "aladinItemId가 없습니다" },
+      { error: "isbn13이 올바르지 않습니다" },
       { status: 400 },
     );
   }
@@ -53,12 +52,12 @@ export async function POST(request: Request) {
 
   let bookId: string;
   try {
-    bookId = await ensureBook(supabase, aladinItemId);
+    bookId = await ensureBook(supabase, isbn13);
   } catch (error) {
-    if (error instanceof AladinError) {
+    if (error instanceof KakaoError) {
       console.error("[shelf]", error.message);
       return NextResponse.json(
-        { error: "알라딘에서 책 정보를 받지 못했습니다" },
+        { error: "책 정보를 받지 못했습니다" },
         { status: 502 },
       );
     }

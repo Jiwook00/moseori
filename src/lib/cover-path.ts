@@ -1,6 +1,6 @@
 /**
  * 표지 버킷 이름과 공개 URL. 클라이언트에서 import해도 안전합니다 —
- * 실제 표지 처리(sharp, 알라딘 왕복)는 서버 전용인 `cover.ts`에 있습니다.
+ * 실제 표지 처리(sharp, 원본 왕복)는 서버 전용인 `cover.ts`에 있습니다.
  */
 
 export const COVER_BUCKET = "cover";

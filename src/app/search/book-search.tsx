@@ -53,13 +53,13 @@ export default function BookSearch({
   }
 
   async function add(result: SearchResult, status: string) {
-    setAddingId(result.aladinItemId);
+    setAddingId(result.isbn13);
     setMessage(null);
     try {
       const response = await fetch("/api/shelf", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ aladinItemId: result.aladinItemId, status }),
+        body: JSON.stringify({ isbn13: result.isbn13, status }),
       });
       const body = await response.json();
       if (!response.ok) {
@@ -100,7 +100,7 @@ export default function BookSearch({
       {results && results.length > 0 && (
         <ul className="mt-9 flex flex-col gap-9">
           {results.map((result) => {
-            const adding = addingId === result.aladinItemId;
+            const adding = addingId === result.isbn13;
 
             // 아직 담지 않은 책이라 표지 픽셀 크기를 몰라 next/image를 쓸 수 없습니다.
             const cover = result.cover ? (
@@ -120,7 +120,7 @@ export default function BookSearch({
               .join(" · ");
 
             return (
-              <li key={result.aladinItemId}>
+              <li key={result.isbn13}>
                 {result.shelfItemId ? (
                   <div className="flex gap-5">
                     {cover}
