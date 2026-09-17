@@ -8,7 +8,7 @@
 
 - **Next.js 16** (App Router) · React 19 · TypeScript · Tailwind v4
 - **Supabase** — 인증(구글 OAuth) · Postgres(RLS) · Storage(표지)
-- **알라딘 TTB API** — 책 검색·담기·표지·대표색
+- **카카오 책 검색 API** — 책 검색·담기·표지·대표색
 
 ## 화면
 
@@ -29,7 +29,7 @@ npm run lint    # 린트
 ```
 
 환경변수는 `.env.local` (`.env.local.example` 참조) —
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `ALADIN_TTB_KEY`.
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `KAKAO_REST_API_KEY`.
 
 ## 단축키
 
