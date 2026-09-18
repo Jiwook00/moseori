@@ -81,7 +81,7 @@ export default function BookSearch({
         placeholder="책 제목이나 저자"
         aria-label="책 검색"
         autoFocus={autoFocus}
-        className="placeholder:text-sub/70 min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none"
+        className="placeholder:text-sub/70 min-w-0 flex-1 bg-transparent py-2 text-[16px] outline-none"
       />
       <button
         type="submit"

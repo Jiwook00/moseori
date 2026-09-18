@@ -97,7 +97,7 @@ export default function AddPassage({
           onModEnter={() => submit()}
           onArrowDownAtLastLine={() => pageRef.current?.focus()}
           placeholder="좋았던 문장"
-          className="placeholder:text-sub/70 text-ink min-h-[56px] w-full bg-transparent font-serif text-[15px] leading-[1.75] outline-none"
+          className="placeholder:text-sub/70 text-ink min-h-[56px] w-full bg-transparent font-serif text-[16px] leading-[1.75] outline-none"
         />
 
         <div className="mt-[18px] flex items-center gap-3">
@@ -116,7 +116,7 @@ export default function AddPassage({
             inputMode="numeric"
             placeholder="쪽"
             aria-label="쪽수 (선택)"
-            className="border-line placeholder:text-sub/70 w-16 border bg-transparent px-2 py-1 text-xs outline-none"
+            className="border-line placeholder:text-sub/70 w-16 border bg-transparent px-2 py-1 text-[16px] outline-none"
           />
           {!showComment && (
             <button
@@ -144,7 +144,7 @@ export default function AddPassage({
             onModEnter={() => submit()}
             placeholder="이 문장에 대한 생각 (선택)"
             autoFocus
-            className="placeholder:text-sub/70 text-ink mt-[24px] min-h-[44px] w-full bg-transparent text-[13px] leading-[1.6] outline-none"
+            className="placeholder:text-sub/70 text-ink mt-[24px] min-h-[44px] w-full bg-transparent text-[16px] leading-[1.6] outline-none"
           />
         )}
       </div>
