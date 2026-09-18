@@ -83,7 +83,7 @@ export default function ReviewEditor({
             onModEnter={save}
             placeholder="이 책에 대해 남기고 싶은 말"
             autoFocus
-            className="placeholder:text-sub/70 text-ink mt-4 min-h-[112px] w-full bg-transparent text-[15px] leading-[1.7] outline-none"
+            className="placeholder:text-sub/70 text-ink mt-4 min-h-[112px] w-full bg-transparent text-[16px] leading-[1.7] outline-none"
           />
           <div className="mt-4 flex items-center gap-3">
             <button

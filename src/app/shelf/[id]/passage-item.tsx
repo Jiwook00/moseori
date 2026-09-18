@@ -139,7 +139,7 @@ export default function PassageItem({
             onArrowDownAtLastLine={() => pageRef.current?.focus()}
             aria-label="문장"
             autoFocus
-            className="placeholder:text-sub/70 text-ink min-h-[44px] w-full bg-transparent font-serif text-[15px] leading-[1.75] outline-none"
+            className="placeholder:text-sub/70 text-ink min-h-[44px] w-full bg-transparent font-serif text-[16px] leading-[1.75] outline-none"
           />
 
           {/* 읽기와 같은 자리의 손그림 선. 같은 시드라 같은 파형입니다. */}
@@ -169,7 +169,7 @@ export default function PassageItem({
               inputMode="numeric"
               placeholder="쪽"
               aria-label="쪽수 (선택)"
-              className="border-line bg-card placeholder:text-sub/70 w-16 border px-2 py-1 text-xs outline-none"
+              className="border-line bg-card placeholder:text-sub/70 w-16 border px-2 py-1 text-[16px] outline-none"
             />
             {error && <span className="text-sub text-xs">{error}</span>}
             <button
@@ -269,7 +269,7 @@ export default function PassageItem({
             onModEnter={saveThought}
             placeholder="이 문장에 생각 남기기"
             autoFocus
-            className="placeholder:text-sub/70 text-ink min-h-[44px] w-full bg-transparent text-[13px] leading-[1.6] outline-none"
+            className="placeholder:text-sub/70 text-ink min-h-[44px] w-full bg-transparent text-[16px] leading-[1.6] outline-none"
           />
           <div className="mt-2 flex items-center gap-3">
             {error && <span className="text-sub text-xs">{error}</span>}

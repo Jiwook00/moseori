@@ -80,7 +80,7 @@ export default function CommentItem({
           onModEnter={submit}
           aria-label="생각"
           autoFocus
-          className="placeholder:text-sub/70 text-ink min-h-[40px] w-full bg-transparent text-[13px] leading-[1.6] outline-none"
+          className="placeholder:text-sub/70 text-ink min-h-[40px] w-full bg-transparent text-[16px] leading-[1.6] outline-none"
         />
         <div className="mt-2 flex items-center gap-3 text-xs">
           {error && <span className="text-sub">{error}</span>}
