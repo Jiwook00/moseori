@@ -50,6 +50,11 @@ export default function AddPassage({
     setComment("");
     setShowComment(false);
 
+    // 다음 밑줄을 문장부터 이어 쓰게 커서를 문장 칸으로 되돌린다.
+    // 비동기(startTransition) 안이 아니라 여기서 동기로 부른다 — iOS는 사용자
+    // 제스처를 벗어난 focus를 막아, 그래야 모바일 키보드가 안 닫히고 이어진다.
+    bodyRef.current?.focus();
+
     startTransition(async () => {
       const now = new Date().toISOString();
       applyOptimistic({
