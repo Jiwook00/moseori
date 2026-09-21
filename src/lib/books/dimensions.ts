@@ -31,10 +31,18 @@ type SizeInput = {
 export function bookSize(book: SizeInput): BookSize {
   const { size_width, size_height, cover_width, cover_height } = book;
 
-  // 판형이 없으면 기본값. 한쪽만 있는 경우도 믿지 않습니다 —
-  // 비율을 만들 수 없으니 반쪽짜리 값보다 기본값이 낫습니다.
-  if (!size_width || !size_height) {
+  // 세로가 없으면 기본값 — 격자 높이는 세로가 정하므로 폭만으로는 그릴 수 없습니다.
+  if (!size_height) {
     return { ...DEFAULT_SIZE, corrected: false };
+  }
+
+  // 세로만 있는 책 (카카오+국립중앙도서관 보조). NL은 방향이 맞아 flip 판정이 필요 없습니다.
+  // 폭은 coverBox가 표지 비율로 정하고, 여기 폭은 표지 없는 책의 대체 비율용 기본값입니다.
+  if (!size_width) {
+    const width = Math.round(
+      (size_height * DEFAULT_SIZE.width) / DEFAULT_SIZE.height,
+    );
+    return { width, height: size_height, corrected: false };
   }
 
   // 표지를 못 받았거나 픽셀을 못 읽은 책. 심판이 없으니 알라딘을 믿습니다.

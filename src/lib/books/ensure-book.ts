@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { lookUpBook } from "@/lib/kakao/client";
 import { toBookInsert } from "@/lib/kakao/map";
+import { lookUpBookExtra } from "@/lib/nl/client";
 import { COVER_BUCKET } from "@/lib/cover-path";
 import { extensionFor, extractAccentColor, fetchCover } from "@/lib/cover";
 
@@ -93,7 +94,15 @@ export async function ensureBook(
     return existing.id;
   }
 
-  const row = toBookInsert(await lookUpBook(isbn13));
+  // 카카오엔 쪽수·판형이 없어 국립중앙도서관 서지정보로 보조합니다 (기획서 §7 · ADR 0004).
+  // 세로만 저장하고 폭은 §5가 표지 비율로 정합니다. 실패해도 null이라 담기를 막지 않습니다.
+  const kakao = toBookInsert(await lookUpBook(isbn13));
+  const extra = await lookUpBookExtra(isbn13);
+  const row = {
+    ...kakao,
+    page_count: extra.pageCount,
+    size_height: extra.sizeHeight,
+  };
 
   const { data: inserted, error } = await supabase
     .from("book")
